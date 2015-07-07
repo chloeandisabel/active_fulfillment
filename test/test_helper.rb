@@ -6,6 +6,7 @@ require 'minitest/autorun'
 require 'mocha/setup'
 require 'timecop'
 require 'pry'
+require 'byebug'
 
 require 'logger'
 ActiveFulfillment::Service.logger = Logger.new(nil)
