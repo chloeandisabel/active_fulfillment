@@ -34,7 +34,10 @@ begin
 rescue LoadError
 end
 
+require 'active_model'
+
 require 'builder'
+require 'nokogiri'
 require 'cgi'
 require 'net/https'
 require 'rexml/document'
@@ -45,3 +48,4 @@ require 'active_fulfillment/base'
 require 'active_fulfillment/response'
 require 'active_fulfillment/service'
 require 'active_fulfillment/services'
+require 'active_fulfillment/models'
