@@ -24,10 +24,13 @@ Gem::Specification.new do |s|
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('active_utils', '~> 3.3.1')
   s.add_dependency('nokogiri', '>= 1.6.8')
+  s.add_dependency('activemodel', '>= 3.2.9')
+  s.add_dependency('thor')
 
   s.add_development_dependency('rake')
   s.add_development_dependency('mocha', '~> 1.1')
   s.add_development_dependency('minitest', '>= 4.7')
   s.add_development_dependency('timecop')
   s.add_development_dependency('pry')
+  s.add_development_dependency('byebug')
 end
