@@ -1,16 +1,3 @@
-module ActiveUtils
-  module PostsData
-    def handle_response(response)
-      case response.code.to_i
-      when 200...300
-        response.body
-      else
-        raise ResponseError.new(response)
-      end
-    end
-  end
-end
-
 module ActiveFulfillment
 
   class DotcomDistributionService < Service
