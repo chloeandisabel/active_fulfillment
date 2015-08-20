@@ -75,19 +75,13 @@ module ActiveFulfillment
       }
     end
 
-    # I didn't test this method at all ! It kind of looks like it works, but I don't know.
-    def build_query(query_params)
-      query_params.sort.map{ |key, value| [escape(key.to_s), escape(value.to_s)].join('=') }.join('&')
-    end
-
-    # It's weird to have a class called PostOrder, the model of an Order on a +get+
-    # and the model that supports a +post+ are so vastly different.
     def fulfill(options = {})
       commit :fulfillment, :post, SERVICE_ENDPOINTS[:fulfillment][1].new(options)
     end
 
+    # Tell Dotcom that stock is being sent to their warehouse.
     def purchase_order(options = {})
-      commit :purchase_order, :post, SERVICE_ENDPOINTS[:fulfillment][1].new(options)
+      commit :purchase_order, :post, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
     end
 
     # +post_item+ and +purchase_order+ are used to let Dotcom know
