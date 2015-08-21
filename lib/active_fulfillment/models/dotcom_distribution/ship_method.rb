@@ -17,9 +17,9 @@ module ActiveFulfillment
       validates_length_of :shipping_code, maximum: 40, allow_blank: false
       validates_length_of :shipping_description, maximum: 300, allow_blank: false
 
-      def self.from_response(response)
+      def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
-        doc = Nokogiri.XML(response)
+        doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
 
         doc.xpath("//ship_method").each do |r|

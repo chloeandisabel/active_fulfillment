@@ -18,9 +18,9 @@ module ActiveFulfillment
                     :backorder_items
 
 
-      def self.from_response(response)
+      def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
-        doc = Nokogiri.XML(response)
+        doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
 
         doc.xpath("//backorder").each do |el|

@@ -13,31 +13,26 @@ module ActiveFulfillment
                     :rn,
                     :return_items
 
-      def self.from_response(response)
+      def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
-        doc = Nokogiri.XML(response)
+        doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
 
         doc.xpath("//Return").each do |el|
+          hash[:dcd_return_number] = el.at('.//dcd_return_number').try(:text)
           hash[:department] = el.at('.//department').try(:text)
           hash[:original_order_number] = el.at('.//original_order_number').try(:text)
-          hash[:dcd_order_number] = el.at('.//dcd_order_number').try(:text)
           hash[:return_date] = el.at('.//return_date')
-          hash[:original_ship_date] = el.at('.//original_ship_date')
-          hash[:rt] = el.at('.//rt')
+          hash[:rn] = el.at('.//rn')
 
-          hash[:return_items] = [] if hash[:return_items].nil? && el.xpath('.//ret_item').size > 0
-
-          el.xpath('.//ret_item').each do |item|
-            h = {}
-            h[:sku] = item.at('.//sku').try(:text)
-            h[:quantity_returned] = item.at('.//quantity_returned').try(:text)
-            h[:line_number] = item.at('.//line_number').try(:text)
-            h[:item_disposition] = item.at('.//item_disposition').try(:text)
-            h[:return_reason_code] = item.at('.//return_reason_code').try(:text)
-
-            hash[:return_items] << ReturnItem.new(h)
+          hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
+            ReturnItem.new(sku: item.at('.//sku').try(:text),
+                           quantity_returned: item.at('.//quantity_returned').try(:text),
+                           line_number: item.at('.//line_number').try(:text),
+                           item_disposition: item.at('.//item_disposition').try(:text),
+                           returns_reason_code: item.at('.//returns_reason_code').try(:text))
           end
+          hash[:return_items] = nil if hash[:return_items].length == 0
 
           records << Return.new(hash)
         end
@@ -53,8 +48,7 @@ module ActiveFulfillment
                     :quantity_returned,
                     :line_number,
                     :item_disposition,
-                    :return_reason_code
+                    :returns_reason_code
     end
-
   end
 end
