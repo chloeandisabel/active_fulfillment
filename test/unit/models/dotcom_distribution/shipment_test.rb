@@ -50,7 +50,7 @@ class GetOrderTest < Minitest::Test
       </response>
     SQL
 
-    @shipment = Shipment.from_response(xml).data.first
+    @shipment = Shipment.response_from_xml(xml).data.first
 
   end
 

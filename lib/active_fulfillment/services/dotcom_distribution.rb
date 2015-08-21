@@ -91,8 +91,6 @@ module ActiveFulfillment
       commit :post_item, :post, SERVICE_ENDPOINTS[:fulfillment][1].new(options)
     end
 
-    # We're not necessarily going to use +fetch_stock_levels+ because
-    # our integration with Zoyto only deals with +adjustments+
     def fetch_stock_levels(options = {})
       commit :fetch_stock_levels, options
     end
@@ -136,14 +134,14 @@ module ActiveFulfillment
     def parse_response(action, xml)
       if SERVICE_ENDPOINTS[action].size == 2
         klass = SERVICE_ENDPOINTS[action][1]
-        klass.from_response(xml)
+        klass.response_from_xml(xml)
       else
         begin
           klass = ("ActiveFulfillment::DotcomDistribution::" + (:post_item.to_s.classify)).constantize
-          if klass.respond_to?(:from_response)
-            klass.from_response(xml)
+          if klass.respond_to?(:response_from_xml)
+            klass.response_from_xml(xml)
           else
-            raise "from_response not implemented in #{klass}"
+            raise "response_from_xml not implemented in #{klass}"
           end
         rescue NameError => e
           raise ArgumentError, "Unknown action #{action}"
