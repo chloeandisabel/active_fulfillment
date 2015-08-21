@@ -21,7 +21,7 @@ class OrderTest < Minitest::Test
       </response>
     SQL
 
-    @order = GetOrder.from_response(xml).data.first
+    @order = GetOrder.response_from_xml(xml).data.first
   end
 
 
