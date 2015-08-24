@@ -11,9 +11,6 @@ module ActiveFulfillment
                     :order_status,
                     :ship_date
 
-      def order_status
-        status = @order_status.downcase
-      end
 
       def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
