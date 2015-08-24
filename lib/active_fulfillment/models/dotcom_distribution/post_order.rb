@@ -16,7 +16,6 @@ module ActiveFulfillment
     # Gift order indicator:
     #   Is a Y/N field.  If you pass us Y and we display prices on your
     #   invoice we will suppress printing the price and values.
-
     class PostOrder
 
       include ::ActiveModel::Model
@@ -140,15 +139,21 @@ module ActiveFulfillment
 
       class LineItemValidator < ActiveModel::EachValidator
         def validate_each(record, attribute, value)
-          record.line_items.each do |li|
-            record.errors[:line_items] << li.errors unless li.valid?
+          if record.line_items
+            record.line_items.each do |li|
+              record.errors[:line_items] << li.errors unless li.valid?
+            end
           end
         end
       end
 
       class BillingInformationValidator < ActiveModel::EachValidator
         def validate_each(record, attribute, value)
-          record.errors[:billing_information] << record.billing_information.errors unless record.billing_information.valid?
+          if record.billing_information
+            unless record.billing_information.valid?
+              record.errors[:billing_information] << record.billing_information.errors
+            end
+          end
         end
       end
 

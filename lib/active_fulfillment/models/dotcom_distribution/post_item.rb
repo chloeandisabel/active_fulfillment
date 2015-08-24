@@ -54,7 +54,7 @@ module ActiveFulfillment
       validates_length_of :country_of_origin, maximum: 2, allow_blank: true
       validates_length_of :long_description, maximum: 50, allow_blank: true
       validates_length_of :harmonized_code, maximum: 10, allow_blank: true
-      validates_length_of :manufactoring_code, maximum: 10, allow_blank: true
+      validates_length_of :manufacturing_code, maximum: 10, allow_blank: true
       validates_length_of :style_number, maximum: 10, allow_blank: true
       validates_length_of :short_name, maximum: 15, allow_blank: true
       validates_length_of :color, maximum: 5, allow_blank: true
