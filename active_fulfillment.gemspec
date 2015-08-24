@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('nokogiri', '>= 1.6')
   s.add_dependency('active_utils', '~> 3.0')
+  s.add_dependency('rubysl-resolv')
   s.add_dependency('thor')
 
   s.add_development_dependency('rake')
