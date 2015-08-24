@@ -1,10 +1,3 @@
-require 'active_fulfillment/models/dotcom_distribution/ship_method'
-require 'active_fulfillment/models/dotcom_distribution/backorder'
-require 'active_fulfillment/models/dotcom_distribution/post_item'
-require 'active_fulfillment/models/dotcom_distribution/post_order'
-require 'active_fulfillment/models/dotcom_distribution/get_order'
-require 'active_fulfillment/models/dotcom_distribution/purchase_order'
-require 'active_fulfillment/models/dotcom_distribution/return'
-require 'active_fulfillment/models/dotcom_distribution/inventory'
-require 'active_fulfillment/models/dotcom_distribution/adjustment'
-require 'active_fulfillment/models/dotcom_distribution/shipment'
+Dir[File.join(__dir__, "models/dotcom_distribution/*.rb")].each do |path|
+  require "active_fulfillment/models/dotcom_distribution/#{File.basename(path).sub(/\.rb$/, '')}"
+end
