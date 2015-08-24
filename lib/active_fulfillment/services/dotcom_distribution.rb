@@ -145,7 +145,7 @@ module ActiveFulfillment
         klass.response_from_xml(xml)
       else
         begin
-          klass = ("ActiveFulfillment::DotcomDistribution::" + (:action.to_s.classify)).constantize
+          klass = ("ActiveFulfillment::DotcomDistribution::" + (action.to_s.classify)).constantize
           if klass.respond_to?(:response_from_xml)
             klass.response_from_xml(xml)
           else
