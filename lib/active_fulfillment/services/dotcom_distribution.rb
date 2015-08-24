@@ -1,3 +1,5 @@
+require_relative '../models/dotcom_distribution/item_summary.rb'
+
 module ActiveFulfillment
 
   class DotcomDistributionService < Service
@@ -32,6 +34,7 @@ module ActiveFulfillment
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
       purchase_order: ["purchase_order", PurchaseOrder],
+      item_summary: ["item_summary", ItemSummary],
       inventory_by_status: ["inventory_by_status"],
       inventory_snapshot: ["inventory_snapshot"],
       stockstatus: ["stockstatus"],
