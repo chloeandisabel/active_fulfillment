@@ -10,8 +10,8 @@ module ActiveFulfillment
 
     # TODO: I don't know if this is the correct production endpoint
     BASE_URL = {
-      test: 'https://cwa.dotcomdistribution.com/dcd_api_test/DCDAPIService.svc',
-      live: 'http://cwa.dotcomdistribution.com/DCDAPIService.svc/dcd_api'
+      test: 'https://cwa.dotcomdistribution.com/dcd_api_test/DCDAPIService.svc'.freeze,
+      live: 'http://cwa.dotcomdistribution.com/DCDAPIService.svc/dcd_api'.freeze,
     }
 
     # Note that some of these endpoints like +fetch_stock_levels+ don't really

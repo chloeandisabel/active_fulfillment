@@ -14,6 +14,36 @@ module ActiveFulfillment
 
     desc "post_order", "Place an order"
     def post_order
+      order = {
+        order_number: "12",
+        ship_method: "01",
+        tax_percent: 5,
+        line_items: [
+          {
+            sku: "a", line_number: 1, client_item: "abc", quantity: 1,
+            gift_box_wrap_quantity: 1, gift_box_wrap_type: 1
+          }
+        ],
+        billing_information: {
+          customer_number: "12345",
+          name: "Chloe Isabel",
+          address1: "123 abc",
+          city: "Miami",
+          state: "FL",
+          zip: "33018"
+        },
+        shipping_information: {
+          customer_number: "12345",
+          name: "Chloe Isabel",
+          address1: "123 abc",
+          city: "Miami",
+          state: "FL",
+          zip: "33018"
+        },
+        cancel_date: Time.current.strftime("%Y-%m-%d"),
+        order_date: Time.current.strftime("%Y-%m-%d")
+      }
+      puts api.fulfill(order).inspect
     end
 
     desc "get_order", "Retrieve an order"
