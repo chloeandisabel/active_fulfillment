@@ -1,4 +1,4 @@
-require_relative '../models/dotcom_distribution/item_summary.rb'
+require 'cgi'
 
 module ActiveFulfillment
 
@@ -36,7 +36,7 @@ module ActiveFulfillment
       purchase_order: ["purchase_order", PurchaseOrder],
       item_summary: ["item_summary", ItemSummary],
       inventory_by_status: ["inventory_by_status"],
-      inventory_snapshot: ["inventory_snapshot"],
+      inventory_snapshot: ["inventory_snapshot", InventorySnapshot],
       stockstatus: ["stockstatus"],
       receipt: ["receipt"],
       nonpo_receipt: ["nonpo_receipt"],
@@ -46,10 +46,11 @@ module ActiveFulfillment
       receiving_sla: ["receiving_sla"]
     }
 
-    # I'm metaprogramming many of these get requests.
+    # Many of these get requests are handled by +method_missing+.
     #
     #  Example:
     #    service = ActiveFulfillment::DotcomDistributionService.new({username: 'test', password: 'test'})
+    #    # or      ActiveFulfillment::Base.service('dotcom_distribution').new({username: 'test', password: 'test'})
     #    service.receipt({fromReceiptDate: '2010-10-01', toReceiptDate: '2010-10-02'})
     #
     def method_missing(method_sym, *arguments, &block)
@@ -66,8 +67,8 @@ module ActiveFulfillment
     end
 
     def sign(uri)
-      hmac = Base64.encode64(OpenSSL::HMAC.digest(SIGNATURE_METHOD, @options[:password], uri)).chomp
-
+      digest = OpenSSL::Digest.new(SIGNATURE_METHOD)
+      hmac = Base64.encode64(OpenSSL::HMAC.digest(digest, @options[:password], uri)).chomp
       @options[:username] + ":" + hmac
     end
 
@@ -113,15 +114,19 @@ module ActiveFulfillment
 
     private
 
-    def commit(action, verb = :get, data = '')
+    def commit(action, verb = :get, data = nil)
       url = (test? ? BASE_URL[:test] : BASE_URL[:live]) + "/" + SERVICE_ENDPOINTS[action][0]
+      if data
+        params = data.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
+        url += "?#{params.join('&')}"
+      end
       if verb == :get
         response = ssl_get(url, build_headers(url))
       else
         # Because all our classes mixin ActiveModel::Validations
         # we can validate our request in this manner which will
         # add to the errors array
-        if data.valid?
+        if data && data.valid?
           response = ssl_post(url, data.to_xml, build_headers(url))
         else
           # TODO: Not sure what to do with the second argument +message+
@@ -140,7 +145,7 @@ module ActiveFulfillment
         klass.response_from_xml(xml)
       else
         begin
-          klass = ("ActiveFulfillment::DotcomDistribution::" + (:post_item.to_s.classify)).constantize
+          klass = ("ActiveFulfillment::DotcomDistribution::" + (:action.to_s.classify)).constantize
           if klass.respond_to?(:response_from_xml)
             klass.response_from_xml(xml)
           else
