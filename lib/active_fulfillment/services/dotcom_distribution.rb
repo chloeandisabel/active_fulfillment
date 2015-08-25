@@ -100,15 +100,13 @@ module ActiveFulfillment
       commit :fetch_stock_levels, options.delete(:item_id), :get, options
     end
 
-    # This is a call to /shipment, we're implementing a method
-    # from the base class.  Note that the method
-    # definition isn't the same. That is, Dotcom's API does not
-    # make use of order_ids. Not sure what to do with this yet.
-    # TODO: do something with order_ids
     def fetch_tracking_data(order_ids, options = {})
-      commit :fetch_tracking_data, options
+      order_id = order_ids.first unless order_ids.empty?
+      if order_id.nil?
+        requires!(options, :fromShipDate, :toShipDate, :dept, :kitonly)
+      end
+      commit :fetch_tracking_data, order_id, :get, options
     end
-
 
     # Tell Dotcom that stock is being sent to their warehouse.
     def purchase_order(options = {})
@@ -126,8 +124,6 @@ module ActiveFulfillment
       options = options.dup
       commit :item_summary, options.delete(:sku), :get, options
     end
-
-
 
     def test_mode?
       true
