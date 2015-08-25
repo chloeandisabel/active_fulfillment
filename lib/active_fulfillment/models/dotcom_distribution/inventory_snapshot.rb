@@ -17,7 +17,6 @@ module ActiveFulfillment
                     :quantity_unavailable_adjustments,
                     :transaction_date
 
-
       def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
         doc = Nokogiri.XML(xml)

@@ -55,6 +55,11 @@ module ActiveFulfillment
       puts api.inventory_snapshot(invDate: date).inspect
     end
 
+    desc "stock_levels PRODUCT_ID", "Retrieve stock levels for all or one product"
+    def stock_levels(item_id=nil)
+      puts api.fetch_stock_levels(item_id: item_id).inspect
+    end
+
     desc "post_item", "Send item information"
     def post_item
       item = {

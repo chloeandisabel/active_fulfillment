@@ -104,7 +104,8 @@ module ActiveFulfillment
     end
 
     def fetch_stock_levels(options = {})
-      commit :fetch_stock_levels, options
+      options = options.dup
+      commit :fetch_stock_levels, options.delete(:item_id), :get, options
     end
 
     # This is a call to /shipment, we're implementing a method
