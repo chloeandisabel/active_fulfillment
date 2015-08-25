@@ -105,6 +105,13 @@ module ActiveFulfillment
         ].inject({}){|h, (k,v)| h[k] = v; h}
       end
 
+      # Date expected in format yyyy-mm-dd
+      DATE_REGEX = /\d{4}-\d{2}-\d{2}/
+
+      validates_format_of :ship_date, with: DATE_REGEX
+      validates_format_of :cancel_date, with: DATE_REGEX, allow_blank: true
+      validates_format_of :credit_card_expiration, with: /\d{2}\d{2}/, allow_nil: true
+
       validates_length_of :order_number, :in => 1..20, allow_blank: false
       validates_length_of :ship_via, maximum: 20, allow_blank: true
       validates_length_of :drop_ship, maximum: 1, allow_blank: true
@@ -132,7 +139,8 @@ module ActiveFulfillment
       validates_inclusion_of :ship_method, in: :shipping_methods
       validates_inclusion_of :gift_order_indicator, in: %w(Y N), allow_blank: true
 
-      validates_numericality_of :total_tax, :total_shipping_handling, :tax_percent, greater_than_or_equal_to: 0
+      validates_numericality_of :tax_percent, greater_than_or_equal_to: 0, less_than: 100, allow_nil: true
+      validates_numericality_of :total_tax, :total_shipping_handling, :total_order_amount, greater_than_or_equal_to: 0
       validates_numericality_of :declared_value, less_than_or_equal_to: 99999999.99, allow_nil: true
       validates_numericality_of :invoice_number, only_integer: true, less_than: 4294967296, allow_nil: true
       validates_numericality_of :total_discount, greater_than_or_equal_to: 0, less_than: 100.00, allow_nil: true
@@ -387,15 +395,19 @@ module ActiveFulfillment
                     :gift_box_wrap_quantity,
                     :gift_box_wrap_type
 
-      validates_length_of :sku, maximum: 20, allow_blank: true
+      # required arguments
+      validates_length_of :sku, maximum: 17, allow_blank: false
       validates_length_of :line_number, maximum: 20, allow_blank: true
       validates_length_of :client_item, maximum: 20, allow_blank: true
-
       validates_numericality_of :quantity, only_integer: true, greater_than: 0
-      validates_numericality_of :gift_box_wrap_quantity, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999999999
-      validates_numericality_of :gift_box_wrap_type, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999
+      validates_numericality_of :tax, :price, greater_than_or_equal_to: 0,
+        less_than_or_equal_to: 99999.99
+      validates_numericality_of :shipping_handling, greater_than_or_equal_to: 0,
+        less_than_or_equal_to: 999999.99
+
+      validates_numericality_of :gift_box_wrap_quantity, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999999999, allow_nil: true
+      validates_numericality_of :gift_box_wrap_type, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999, allow_nil: true
       validates_numericality_of :line_number, only_integer: true, greater_than: 0, allow_nil: true
-      validates_numericality_of :price, :tax, :shipping_handling, greater_than_or_equal_to: 0, less_than_or_equal_to: 99999999.99, allow_nil: true
 
       def price
         @price || 0
@@ -428,14 +440,16 @@ module ActiveFulfillment
                     :phone,
                     :email
 
-      validates_length_of :customer_number, maximum: 19, allow_blank: true
-      validates_length_of :name, maximum: 30, allow_blank: false
-      validates_length_of :address1, maximum: 30, allow_blank: false
-      validates_length_of :address2, maximum: 30, allow_blank: true
-      validates_length_of :address3, maximum: 30, allow_blank: true
+      # required arguments
+      validates_length_of :name, :address1, maximum: 30, allow_blank: false
       validates_length_of :city, maximum: 20, allow_blank: false
       validates_length_of :state, maximum: 2, allow_blank: false
       validates_length_of :zip, maximum: 10, allow_blank: false
+
+      validates_length_of :customer_number, maximum: 19, allow_blank: true
+      validates_length_of :address2, :address3, maximum: 30, allow_blank: true
+      validates_length_of :country, maximum: 2, allow_blank: true
+      validates :phone, presence: true, length: {maximum: 19}, if: -> { country.present? }
     end
 
   end
