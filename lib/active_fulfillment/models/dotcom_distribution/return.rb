@@ -19,22 +19,24 @@ module ActiveFulfillment
         doc.remove_namespaces!
 
         doc.xpath("//Return").each do |el|
-          hash[:dcd_return_number] = el.at('.//dcd_return_number').try(:text)
-          hash[:department] = el.at('.//department').try(:text)
-          hash[:original_order_number] = el.at('.//original_order_number').try(:text)
-          hash[:return_date] = el.at('.//return_date')
-          hash[:rn] = el.at('.//rn')
+          unless el.attributes["nil"]
+            hash[:dcd_return_number] = el.at('.//dcd_return_number').try(:text)
+            hash[:department] = el.at('.//department').try(:text)
+            hash[:original_order_number] = el.at('.//original_order_number').try(:text)
+            hash[:return_date] = el.at('.//return_date')
+            hash[:rn] = el.at('.//rn')
 
-          hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
-            ReturnItem.new(sku: item.at('.//sku').try(:text),
-                           quantity_returned: item.at('.//quantity_returned').try(:text),
-                           line_number: item.at('.//line_number').try(:text),
-                           item_disposition: item.at('.//item_disposition').try(:text),
-                           returns_reason_code: item.at('.//returns_reason_code').try(:text))
+            hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
+              ReturnItem.new(sku: item.at('.//sku').try(:text),
+                             quantity_returned: item.at('.//quantity_returned').try(:text),
+                             line_number: item.at('.//line_number').try(:text),
+                             item_disposition: item.at('.//item_disposition').try(:text),
+                             returns_reason_code: item.at('.//returns_reason_code').try(:text))
+            end
+            hash[:return_items] = nil if hash[:return_items].length == 0
+
+            records << Return.new(hash)
           end
-          hash[:return_items] = nil if hash[:return_items].length == 0
-
-          records << Return.new(hash)
         end
         Response.new(true, '', {data: records})
       end

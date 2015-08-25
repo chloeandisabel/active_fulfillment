@@ -92,6 +92,11 @@ module ActiveFulfillment
       puts api.order_status(order_number: order_id).inspect
     end
 
+    desc "returns", "Retrieve returns for the given date ranges"
+    def returns(from=(Date.today - 1), to=(Date.today))
+      puts api.returns(fromReturnDate: from.to_s, toReturnDate: to.to_s).inspect
+    end
+
     desc "inventory", "Retrieve all inventory information"
     def inventory(date=Time.current.strftime('%Y-%m-%d'))
       puts api.inventory_snapshot(invDate: date).inspect
