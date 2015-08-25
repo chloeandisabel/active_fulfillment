@@ -122,6 +122,11 @@ module ActiveFulfillment
       commit :order_status, order_id, :get, options
     end
 
+    def returns(options = {})
+      requires!(options, :fromReturnDate, :toReturnDate)
+      commit :returns, nil, :get, options
+    end
+
     # +post_item+ and +purchase_order+ are used to let Dotcom know
     # about our products / SKUs.  If you attempt to place an order
     # with a SKU that Dotcom is not aware of, "you're gonna have a bad day!"
