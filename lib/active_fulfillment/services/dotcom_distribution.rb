@@ -102,7 +102,7 @@ module ActiveFulfillment
 
     def fetch_tracking_data(order_ids, options = {})
       order_id = order_ids.first unless order_ids.empty?
-      if order_id.nil?
+      unless order_id
         requires!(options, :fromShipDate, :toShipDate, :dept, :kitonly)
       end
       commit :fetch_tracking_data, order_id, :get, options
@@ -111,6 +111,15 @@ module ActiveFulfillment
     # Tell Dotcom that stock is being sent to their warehouse.
     def purchase_order(options = {})
       commit :purchase_order, nil, :post, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
+    end
+
+    def order_status(options = {})
+      options = options.dup
+      order_id = options.delete(:order_number)
+      unless order_id
+        requires!(options, :fromOrdDate, :toOrdDate)
+      end
+      commit :order_status, order_id, :get, options
     end
 
     # +post_item+ and +purchase_order+ are used to let Dotcom know
