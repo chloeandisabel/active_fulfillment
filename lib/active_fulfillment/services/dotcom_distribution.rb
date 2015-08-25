@@ -82,8 +82,16 @@ module ActiveFulfillment
       }
     end
 
-    def fulfill(options = {})
-      commit :fulfillment, nil, :post, SERVICE_ENDPOINTS[:fulfillment][1].new(options)
+    def fulfill(order_id, shipping_address, line_items, options = {})
+      requires!(options,
+                :ship_method, :tax_percent, :billing_information, :cancel_date, :order_date)
+      args = {
+        order_number: order_id,
+        shipping_information: shipping_address,
+        line_items: line_items,
+      }
+      data = SERVICE_ENDPOINTS[:fulfillment][1].new(args.merge(options))
+      commit :fulfillment, nil, :post, data
     end
 
     # Tell Dotcom that stock is being sent to their warehouse.
