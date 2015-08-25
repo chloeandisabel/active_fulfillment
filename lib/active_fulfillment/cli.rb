@@ -57,10 +57,38 @@ module ActiveFulfillment
 
     desc "post_item", "Send item information"
     def post_item
+      item = {
+        sku: "a",
+        description: "a",
+        upc: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        weight: 100.12,
+        cost: 1000.12,
+        price: 1000.12,
+        root_sku: "aaaaaaaaaaaaaaaaa",
+        package_qty: 10,
+        serial_indicator: "Y",
+        client_company: "aaaaa",
+        client_department: "aaaaa",
+        client_product_class: 1234,
+        client_product_type: 1234,
+        avg_cost: 50.12,
+        master_pack: 123456,
+        item_barcode: "aaaaaaaaaaaaaaaaaaaaaaaa",
+        #country_of_origin: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        harmonized_code: "aaaaaaaaa",
+        manufacturing_code: "aaaaaaaaaa",
+        style_number: "aaaaaaaaaa",
+        short_name: "aaaaaaaaaa",
+        color: "aaaa",
+        size: "aaaaa",
+        long_description: "aaaaaaaaaa"
+      }
+      puts api.post_item(item).inspect
     end
 
-    desc "get_item", "Retrieve item information [SKU]"
-    def get_item(sku=nil)
+    desc "get_item SKU", "Retrieve item information [SKU]"
+    def get_items(sku=nil)
+      puts api.item_summary(sku: sku).inspect
     end
 
     private
