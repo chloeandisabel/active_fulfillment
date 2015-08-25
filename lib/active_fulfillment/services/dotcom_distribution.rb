@@ -25,15 +25,15 @@ module ActiveFulfillment
     #   class: The class that will parse our response
 
     SERVICE_ENDPOINTS = {
-      post_item: ["item", PostItem],
       fulfillment: ["order", PostOrder],
+      purchase_order: ["purchase_order", PurchaseOrder],
+      post_item: ["item", PostItem],
       order_status: ["order", GetOrder],
       shipmethod: ["shipmethod", ShipMethod],
       fetch_stock_levels: ["inventory", Inventory],
       returns: ["return", Return],
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
-      purchase_order: ["purchase_order", PurchaseOrder],
       item_summary: ["item", ItemSummary],
       inventory_by_status: ["inventory_by_status"],
       inventory_snapshot: ["inventory_snapshot", InventorySnapshot],
@@ -82,6 +82,7 @@ module ActiveFulfillment
       }
     end
 
+    # API Requirements for Active Fulfillment
     def fulfill(order_id, shipping_address, line_items, options = {})
       requires!(options,
                 :ship_method, :tax_percent, :billing_information, :cancel_date, :order_date)
@@ -93,6 +94,21 @@ module ActiveFulfillment
       data = SERVICE_ENDPOINTS[:fulfillment][1].new(args.merge(options))
       commit :fulfillment, nil, :post, data
     end
+
+    def fetch_stock_levels(options = {})
+      options = options.dup
+      commit :fetch_stock_levels, options.delete(:item_id), :get, options
+    end
+
+    # This is a call to /shipment, we're implementing a method
+    # from the base class.  Note that the method
+    # definition isn't the same. That is, Dotcom's API does not
+    # make use of order_ids. Not sure what to do with this yet.
+    # TODO: do something with order_ids
+    def fetch_tracking_data(order_ids, options = {})
+      commit :fetch_tracking_data, options
+    end
+
 
     # Tell Dotcom that stock is being sent to their warehouse.
     def purchase_order(options = {})
@@ -111,19 +127,7 @@ module ActiveFulfillment
       commit :item_summary, options.delete(:sku), :get, options
     end
 
-    def fetch_stock_levels(options = {})
-      options = options.dup
-      commit :fetch_stock_levels, options.delete(:item_id), :get, options
-    end
 
-    # This is a call to /shipment, we're implementing a method
-    # from the base class.  Note that the method
-    # definition isn't the same. That is, Dotcom's API does not
-    # make use of order_ids. Not sure what to do with this yet.
-    # TODO: do something with order_ids
-    def fetch_tracking_data(order_ids, options = {})
-      commit :fetch_tracking_data, options
-    end
 
     def test_mode?
       true

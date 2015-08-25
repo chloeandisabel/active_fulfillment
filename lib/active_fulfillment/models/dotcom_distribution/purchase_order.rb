@@ -53,6 +53,22 @@ module ActiveFulfillment
         end
       end
 
+      def self.response_from_xml(xml)
+        success = true, message = '', hash = {}, records = []
+        doc = Nokogiri.XML(xml)
+        doc.remove_namespaces!
+
+        doc.xpath("//item_error").each do |error|
+          hash[:error_description] = error.at('.//error_description').try(:text)
+          hash[:sku] = error.at('.//sku').try(:text)
+
+          records << hash
+        end
+        if records.length > 0
+          return Response.new(false, '', {data: records})
+        end
+      end
+
     end
   end
 end

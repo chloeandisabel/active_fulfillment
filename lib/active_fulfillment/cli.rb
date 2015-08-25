@@ -47,6 +47,45 @@ module ActiveFulfillment
       puts api.fulfill(order_id, shipping_information, line_items, order).inspect
     end
 
+    desc "create_purchase_order", "Creates a purchase order"
+    def create_purchase_order
+      purchase_order = {
+        po_number: "a",
+        priority_date: Time.now.strftime("%Y-%m-%d"),
+        expected_on_dock: Time.now.strftime("%Y-%m-%d"),
+        items: [
+          {
+            sku: "a",
+            description: "a",
+            quantity: 1,
+            upc: "aaaaaaaaaaaaaaa",
+            weight: 123.12,
+            cost: 123.12,
+            price: 123.12,
+            root_sku: "aaaaa",
+            package_qty: 12345,
+            serial_indicator: "Y",
+            client_company: "aaaa",
+            client_department: "aaaa",
+            client_product_class: 1234,
+            client_product_type: 1234,
+            avg_cost: 123.12,
+            master_pack: 123,
+            item_barcode: "aaaaaaaaa",
+            country_of_origin: "US",
+            harmonized_code: "aaaaa",
+            manufacturing_code: "aaaa",
+            style_number: "aaaaa",
+            short_name: "aaaa",
+            color: "aaaa",
+            size: "aaaa",
+            long_description: "aaaa",
+          }
+        ]
+      }
+      puts api.purchase_order(purchase_order).inspect
+    end
+
     desc "get_order", "Retrieve an order"
     def get_order
     end
