@@ -136,6 +136,15 @@ module ActiveFulfillment
       puts api.item_summary(sku: sku).inspect
     end
 
+    desc "tracking_data ORD_ID", "Get tracking data for all or one ORD_ID"
+    # TODO: options for fromShipDate, toShipDate, dept, kitonly
+    def tracking_data(order_id=nil)
+      opts = {}
+      order_ids = []
+      order_ids << order_id if order_id
+      puts api.fetch_tracking_data(order_ids, opts).inspect
+    end
+
     private
 
     def api
