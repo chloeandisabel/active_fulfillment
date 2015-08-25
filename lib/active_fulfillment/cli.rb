@@ -86,8 +86,10 @@ module ActiveFulfillment
       puts api.purchase_order(purchase_order).inspect
     end
 
-    desc "get_order", "Retrieve an order"
-    def get_order
+    desc "order_status ORD_ID", "Retrieve an order status by ORD_ID or by range"
+    # TODO: options fromOrdDate, toOrdDate
+    def order_status(order_id=nil)
+      puts api.order_status(order_number: order_id).inspect
     end
 
     desc "inventory", "Retrieve all inventory information"
