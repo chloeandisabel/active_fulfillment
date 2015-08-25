@@ -26,15 +26,11 @@ module ActiveFulfillment
           end
           records << ItemSummary.new(hash)
         end
-        if records.length > 0
-          return Response.new(false, '', {data: records})
-        end
-        nil
+        Response.new(success, '', {data: records})
       end
     end
 
     class VendorItem
-
       include ::ActiveModel::Model
 
       attr_accessor :cross_ref
