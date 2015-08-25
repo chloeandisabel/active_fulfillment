@@ -116,11 +116,11 @@ module ActiveFulfillment
 
     def commit(action, verb = :get, data = nil)
       url = (test? ? BASE_URL[:test] : BASE_URL[:live]) + "/" + SERVICE_ENDPOINTS[action][0]
-      if data
-        params = data.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
-        url += "?#{params.join('&')}"
-      end
       if verb == :get
+        if data
+          params = data.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
+          url += "?#{params.join('&')}"
+        end
         response = ssl_get(url, build_headers(url))
       else
         # Because all our classes mixin ActiveModel::Validations
