@@ -4,6 +4,40 @@ class PostOrderTest < Minitest::Test
   include ActiveFulfillment::Test::Fixtures
   include ActiveFulfillment::DotcomDistribution
 
+  def required_attributes
+    {
+      order_number: "MD-6901-396294-1",
+      ship_date: "2015-05-14",
+      ship_method: "01",
+      total_tax: 0.00,
+      total_shipping_handling: 0.00,
+      total_order_amount: 10.00,
+      billing_information: address_attributes,
+      line_items: [line_item_attributes]
+    }
+  end
+
+  def address_attributes
+    {
+      name: 'Dennis Jamrose',
+      address1: '22 Fox Hill Dr',
+      city: 'Fairport',
+      state: 'NY',
+      zip: '14450-8602',
+    }
+  end
+
+  def line_item_attributes
+    {
+      sku: 'MDX-2379-3',
+      quantity: 1,
+      line_number: 1,
+      tax: 0.00,
+      shipping_handling: 0.00,
+      price: 84.99,
+    }
+  end
+
   def setup
     ActiveFulfillment::Base.mode = :test
 
@@ -14,37 +48,38 @@ class PostOrderTest < Minitest::Test
       promise_date: '2015-05-14',
       ship_method: '11',
       department: '01',
-      billing_information: {
+      billing_information: address_attributes,
+      shipping_information: address_attributes.merge({
         customer_number: '341569',
-        name: 'Dennis Jamrose',
-        address1: '22 Fox Hill Dr',
-        state: 'NY',
-        city: 'Fairport',
-        zip: '14450-8602',
-        country: 'US'
-      },
-      shipping_information: {
-        customer_number: '341569',
-        name: 'Dennis Jamrose',
-        address1: '22 Fox Hill Dr',
-        state: 'NY',
-        city: 'Fairport',
-        zip: '14450-8602',
         country: 'US',
         iso_country_code: 'US'
-      },
-      line_items: [{
-        sku: 'MDX-2379-3',
-        quantity: 1,
-        price: 84.99,
-        line_number: 1,
-        tax: 0,
-        shipping_handling: 0
-      }]
+      }),
+      line_items: [line_item_attributes]
     }
 
-    @order_doc = Nokogiri.XML(PostOrder.new(@order).to_xml)
+    @post_order = PostOrder.new(@order)
+    @order_doc = Nokogiri.XML(@post_order.to_xml)
+  end
 
+  def test_address_validation
+    address = Address.new(address_attributes)
+    assert address.valid?
+    address.country = "CO"
+    refute address.valid?
+    address.phone = "1113334444"
+    assert address.valid?
+  end
+
+  def test_line_item_validation
+    line_item = LineItem.new(line_item_attributes)
+    assert line_item.valid?
+  end
+
+  def test_validate_post_order
+    @post_order = PostOrder.new(required_attributes)
+    @post_order.valid?
+    puts @post_order.line_items.first.errors.full_messages
+    assert @post_order.valid?, "got errors #{@post_order.errors.full_messages}"
   end
 
   def test_post_order_top_level_serialization
@@ -109,7 +144,7 @@ class PostOrderTest < Minitest::Test
     order = @order_doc.xpath("//order")
 
     billing_information = order.at('.//billing-information')
-    assert_equal billing_information.at('.//billing-customer-number').text, @order[:billing_information][:customer_number]
+    assert_equal billing_information.at('.//billing-customer-number').text, ""
     assert_equal billing_information.at('.//billing-name').text, @order[:billing_information][:name]
     assert_equal billing_information.at('.//billing-company').text, ''
     assert_equal billing_information.at('.//billing-address1').text, @order[:billing_information][:address1]
@@ -119,7 +154,7 @@ class PostOrderTest < Minitest::Test
     assert_equal billing_information.at('.//billing-email').text, ''
     assert_equal billing_information.at('.//billing-city').text, @order[:billing_information][:city]
     assert_equal billing_information.at('.//billing-state').text, @order[:billing_information][:state]
-    assert_equal billing_information.at('.//billing-country').text, @order[:billing_information][:country]
+    assert_equal billing_information.at('.//billing-country').text, ""
     assert_equal billing_information.at('.//billing-zip').text, @order[:billing_information][:zip]
 
     shipping_information = order.at('.//shipping-information')
@@ -150,6 +185,26 @@ class PostOrderTest < Minitest::Test
     assert_equal line_item.at('.//line-number').text, @order[:line_items].first[:line_number].to_s
     assert_equal line_item.at('.//gift-box-wrap-quantity').text, ''
     assert_equal line_item.at('.//gift-box-wrap-type').text, ''
+  end
+
+  def test_post_order_response_serialization
+    xml =  <<-XML
+    <response xmlns="http://dcd/datacontracts/post_order" xmlns:i="http://www.w3.org/2001/XMLSchema- instance">
+      <order_errors xmlns:a="http://schemas.datacontract.org/2004/07/DCDAPIService">
+        <a:order_error>
+          <a:error_description>The 'ship-date' element is invalid - The value '2011/03/12' is invalid according to its datatype 'Date' - The string '2011/03/12' is not a valid XsdDateTime value.</a:error_description>
+          <a:order_number>123</a:order_number>
+        </a:order_error>
+      </order_errors>
+    </response>
+    XML
+
+    response = PostOrder.response_from_xml(xml)
+    refute response.success?
+    error = response.data.first
+    refute_nil error
+    refute_empty error[:error_description]
+    refute_empty error[:order_number]
   end
 
 end
