@@ -89,7 +89,7 @@ module ActiveFulfillment
     # shipping address and billing address to be the same
     def fulfill(order_id, shipping_address, line_items, options = {})
       requires!(options,
-                :ship_method, :tax_percent, :billing_information, :cancel_date, :order_date)
+                :order_date, :ship_date, :ship_method, :tax_percent, :billing_information)
       args = {
         order_number: order_id,
         shipping_information: shipping_address,

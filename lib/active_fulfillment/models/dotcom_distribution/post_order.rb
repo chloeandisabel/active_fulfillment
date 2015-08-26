@@ -108,8 +108,8 @@ module ActiveFulfillment
       # Date expected in format yyyy-mm-dd
       DATE_REGEX = /\d{4}-\d{2}-\d{2}/
 
-      validates_format_of :ship_date, with: DATE_REGEX
-      validates_format_of :cancel_date, with: DATE_REGEX, allow_blank: true
+      validates_format_of :ship_date, :order_date, with: DATE_REGEX
+      validates_format_of :cancel_date, with: DATE_REGEX, allow_nil: true
       validates_format_of :credit_card_expiration, with: /\d{2}\d{2}/, allow_nil: true
 
       validates_length_of :order_number, :in => 1..20, allow_blank: false
@@ -260,7 +260,7 @@ module ActiveFulfillment
         xml.order do
           xml.send(:"order-number", self.order_number)
           xml.send(:"order-date", self.order_date)
-          xml.send(:"ship_date", self.ship_date, inject_nil(self.ship_date))
+          xml.send(:"ship_date", self.ship_date)
           xml.send(:"ship-method", self.ship_method)
           xml.send(:"ship_via", self.ship_via, inject_nil(self.ship_via))
           xml.send(:"drop-ship", self.drop_ship, inject_nil(self.drop_ship))
@@ -269,7 +269,7 @@ module ActiveFulfillment
           xml.send(:"invoice-number", self.invoice_number, inject_nil(self.invoice_number))
           xml.send(:"declared-value", self.declared_value, inject_nil(self.declared_value))
           xml.send(:"ok-partial-ship", self.ok_partial_ship, inject_nil(self.ok_partial_ship))
-          xml.send(:"cancel-date", self.cancel_date, inject_nil(self.declared_value))
+          xml.send(:"cancel-date", self.cancel_date, inject_nil(self.cancel_date))
           xml.send(:"total-tax", self.total_tax)
           xml.send(:"total-shipping-handling", self.total_shipping_handling)
           xml.send(:"total-discount", self.total_discount)
