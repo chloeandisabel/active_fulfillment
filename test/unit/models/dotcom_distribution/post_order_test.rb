@@ -8,6 +8,7 @@ class PostOrderTest < Minitest::Test
     {
       order_number: "MD-6901-396294-1",
       ship_date: "2015-05-14",
+      order_date: "2015-05-14",
       ship_method: "01",
       total_tax: 0.00,
       total_shipping_handling: 0.00,
@@ -44,7 +45,6 @@ class PostOrderTest < Minitest::Test
     @order = {
       order_number: 'MD-6901-396294-1',
       order_date: '2015-05-14',
-      cancel_date: '2015-05-14',
       promise_date: '2015-05-14',
       ship_method: '11',
       department: '01',
@@ -85,6 +85,8 @@ class PostOrderTest < Minitest::Test
   def test_post_order_top_level_serialization
     order = @order_doc.xpath("//order")
 
+    assert order.at('.//cancel-date').attributes["nil"]
+
     assert_equal order.at('.//order-number').text, @order[:order_number]
     assert_equal order.at('.//order-date').text, @order[:order_date]
     assert_equal order.at('.//ship-method').text, @order[:ship_method]
@@ -95,7 +97,6 @@ class PostOrderTest < Minitest::Test
     assert_equal order.at('.//invoice-number').text, ''
     assert_equal order.at('.//ok-partial-ship').text, ''
     assert_equal order.at('.//declared-value').text, '0'
-    assert_equal order.at('.//cancel-date').text, '2015-05-14'
     assert_equal order.at('.//total-tax').text, '0'
     assert_equal order.at('.//total-shipping-handling').text, '0'
     assert_equal order.at('.//total-discount').text, '0'
