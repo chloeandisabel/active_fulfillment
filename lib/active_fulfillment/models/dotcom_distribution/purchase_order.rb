@@ -54,7 +54,7 @@ module ActiveFulfillment
       end
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        hash = {}, records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
 
