@@ -30,6 +30,8 @@ module ActiveFulfillment
       }
       order_id = "12"
       order = {
+        ship_date: Time.current.strftime("%Y-%m-%d"),
+        order_date: Time.current.strftime("%Y-%m-%d"),
         ship_method: "01",
         tax_percent: 5,
         billing_information: {
@@ -40,9 +42,6 @@ module ActiveFulfillment
           state: "FL",
           zip: "33018"
         },
-        # TODO: these are not validated by the model.
-        cancel_date: Time.current.strftime("%Y-%m-%d"),
-        order_date: Time.current.strftime("%Y-%m-%d")
       }
       puts api.fulfill(order_id, shipping_information, line_items, order).inspect
     end
