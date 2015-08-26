@@ -19,6 +19,12 @@ namespace :test do
     t.libs << 'test'
     t.verbose = true
   end
+
+  Rake::TestTask.new(:dcd) do |t|
+    t.pattern = "test/remote/dotcom_distribution_test.rb"
+    t.libs << 'test'
+    t.verbose = true
+  end
 end
 
 task :default => 'test:dotcom'
