@@ -54,13 +54,14 @@ module ActiveFulfillment
       end
 
       def self.response_from_xml(xml)
-        hash = {}, records = []
+        hash = {}
+        records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
 
-        doc.xpath("//item_error").each do |error|
+        doc.xpath("//purchase_order_error").each do |error|
           hash[:error_description] = error.at('.//error_description').try(:text)
-          hash[:sku] = error.at('.//sku').try(:text)
+          hash[:purchase_order_number] = error.at('.//purchase_order_number').try(:text)
 
           records << hash
         end
