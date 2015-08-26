@@ -83,6 +83,10 @@ module ActiveFulfillment
     end
 
     # API Requirements for Active Fulfillment
+    # Dotcom requires a billing_address to be present and sets
+    # the shipping address to the billing address
+    # if shipping address is not present. For now, set both
+    # shipping address and billing address to be the same
     def fulfill(order_id, shipping_address, line_items, options = {})
       requires!(options,
                 :ship_method, :tax_percent, :billing_information, :cancel_date, :order_date)
