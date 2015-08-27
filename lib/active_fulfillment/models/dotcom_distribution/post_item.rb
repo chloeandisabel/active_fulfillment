@@ -118,7 +118,9 @@ module ActiveFulfillment
           xml.send(:"description") do
             xml.cdata self.description
           end
-          xml.send(:"quantity", self.quantity, inject_nil(self.quantity))
+          if quantity
+            xml.send(:"quantity", self.quantity)
+          end
           xml.send(:"weight", self.weight, inject_nil(self.weight))
           xml.send(:"cost", self.cost, inject_nil(self.cost))
           xml.send(:"upc", self.upc, inject_nil(self.upc))

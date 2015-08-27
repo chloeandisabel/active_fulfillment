@@ -14,3 +14,7 @@ amazon_mws:
 james_and_james:
   subdomain:
   key:
+
+dotcom_distribution:
+  username:
+  password:
