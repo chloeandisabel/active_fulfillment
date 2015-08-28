@@ -22,6 +22,8 @@ module ActiveFulfillment
       include ::ActiveModel::Validations
       include ::ActiveModel::Serializers::Xml
 
+      include XMLHelper
+
       attr_accessor :order_number,
                     :order_date,
                     :ship_method,
@@ -212,18 +214,14 @@ module ActiveFulfillment
         @custom_fields || []
       end
 
-      def inject_nil(v)
-        v ? {} : {'xsi:nil': 'true'}
-      end
 
       def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []
-        doc = Nokogiri.XML(xml)
-        doc.remove_namespaces!
+        doc = REXML::Document.new(xml)
 
-        doc.xpath("//order_error").each do |error|
-          hash[:error_description] = error.at('.//error_description').try(:text)
-          hash[:order_number] = error.at('.//order_number').try(:text)
+        REXML::XPath.each(doc, "//a:order_error", {"a" => "http://schemas.datacontract.org/2004/07/DCDAPIService"}) do |error|
+          hash[:error_description] = error.elements["//a:error_description"].try(:text)
+          hash[:order_number] = error.elements["//a:order_number"].try(:text)
 
           records << hash
         end
@@ -233,157 +231,109 @@ module ActiveFulfillment
       end
 
       def self.to_xml(orders)
-        xml_builder = Nokogiri::XML::Builder.new do |xml|
-          xml.orders({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do
-            orders.each do |order|
-              order.order_to_xml(xml)
-            end
-          end
+        doc = REXML::Document.new
+        doc.add_element("orders", {"xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance"})
+        (orders || []).each do |order|
+          doc.root.elements << order.to_rexml
         end
-
-        xml_builder.to_xml
+        doc.to_s
       end
 
       def to_xml
-        xml_builder = Nokogiri::XML::Builder.new do |xml|
-          xml.orders({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do
-            order_to_xml(xml)
-          end
+        doc = REXML::Document.new
+        doc.add_element("orders", {"xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance"})
+        doc.root.elements << to_rexml
+
+        doc.to_s
+      end
+
+      def to_rexml
+        order = REXML::Element.new("order")
+        order.add_element("order-number").text = order_number
+        order.add_element("order-date").text = order_date
+        order.add_element("ship-date").text = ship_date
+        order.add_element("ship-method").text = ship_method
+        order.add_element("ship-via", inject_nil(ship_via)).text = ship_via
+        order.add_element("drop-ship", inject_nil(drop_ship)).text = drop_ship
+        order.add_element("special-instructions", inject_nil(special_instructions)).text = special_instructions
+        order.add_element("special-messaging", inject_nil(special_messaging)).text = special_messaging
+        order.add_element("invoice-number", inject_nil(invoice_number)).text = invoice_number
+        order.add_element("declared-value", inject_nil(declared_value)).text = declared_value
+        order.add_element("ok-partial-ship", inject_nil(ok_partial_ship)).text = ok_partial_ship
+        order.add_element("cancel-date", inject_nil(cancel_date)).text = cancel_date
+        order.add_element("total-tax").text = total_tax
+        order.add_element("total-shipping-handling").text = total_shipping_handling
+        order.add_element("total-discount").text = total_discount
+        order.add_element("total-order-amount").text = total_order_amount
+        order.add_element("po-number", inject_nil(po_number)).text = po_number
+        order.add_element("salesman", inject_nil(salesman)).text = salesman
+        order.add_element("credit-card-number", inject_nil(credit_card_number)).text = credit_card_number
+        order.add_element("credit-card-expiration", inject_nil(credit_card_expiration)).text = credit_card_expiration
+        order.add_element("ad-code", inject_nil(ad_code)).text = ad_code
+        order.add_element("continuity-flag", inject_nil(continuity_flag)).text = continuity_flag
+        order.add_element("freight-terms", inject_nil(freight_terms)).text = freight_terms
+        order.add_element("department", inject_nil(department)).text = department
+        order.add_element("pay-terms", inject_nil(pay_terms)).text = pay_terms
+        order.add_element("tax-percent", inject_nil(tax_percent)).text = tax_percent
+        order.add_element("asn-qualifier", inject_nil(asn_qualifier)).text = asn_qualifier
+        order.add_element("gift-order-indicator", inject_nil(gift_order_indicator)).text = gift_order_indicator
+        order.add_element("order-source", inject_nil(order_source)).text = order_source
+        order.add_element("promise-date", inject_nil(promise_date)).text = promise_date
+        order.add_element("third-party-account", inject_nil(third_party_account)).text = third_party_account
+        order.add_element("priority", inject_nil(priority)).text = priority
+        order.add_element("retail-department", inject_nil(retail_department)).text = retail_department
+        order.add_element("retail-store", inject_nil(retail_store)).text = retail_store
+        order.add_element("retail-vendor", inject_nil(retail_vendor)).text = retail_vendor
+        order.add_element("pool", inject_nil(pool)).text = pool
+
+        custom_fields = order.add_element("custom-fields")
+        1.upto(5) do |i|
+          field = custom_fields.add_element("custom-field-#{i}", inject_nil(custom_fields[i]))
+          field.text = custom_fields[i]
         end
 
-        xml_builder.to_xml
+        order.elements << billing_information.to_rexml("billing")
+        order.elements << shipping_information.to_rexml("shipping")
+
+        # TODO: ideally this will be like this instead of using add_store_information
+        # order.add_element("store-information").elements << store_information.to_rexml
+        add_store_information(order, self.store_information)
+
+        line_items_el = order.add_element("line-items")
+        Array(line_items).each do |li|
+          line_items_el.elements << li.to_rexml
+        end
+
+        order
       end
 
       private
 
-      def order_to_xml(xml)
-        xml.order do
-          xml.send(:"order-number", self.order_number)
-          xml.send(:"order-date", self.order_date)
-          xml.send(:"ship_date", self.ship_date)
-          xml.send(:"ship-method", self.ship_method)
-          xml.send(:"ship_via", self.ship_via, inject_nil(self.ship_via))
-          xml.send(:"drop-ship", self.drop_ship, inject_nil(self.drop_ship))
-          xml.send(:"special-instructions", self.special_instructions, inject_nil(self.special_instructions))
-          xml.send(:"special-messaging", self.special_messaging, inject_nil(self.special_messaging))
-          xml.send(:"invoice-number", self.invoice_number, inject_nil(self.invoice_number))
-          xml.send(:"declared-value", self.declared_value, inject_nil(self.declared_value))
-          xml.send(:"ok-partial-ship", self.ok_partial_ship, inject_nil(self.ok_partial_ship))
-          xml.send(:"cancel-date", self.cancel_date, inject_nil(self.cancel_date))
-          xml.send(:"total-tax", self.total_tax)
-          xml.send(:"total-shipping-handling", self.total_shipping_handling)
-          xml.send(:"total-discount", self.total_discount)
-          xml.send(:"total-order-amount", self.total_order_amount)
-          xml.send(:"po-number", self.po_number, inject_nil(self.po_number))
-          xml.send(:"salesman", self.salesman, inject_nil(self.salesman))
-          xml.send(:"credit-card-number", self.credit_card_number, inject_nil(self.credit_card_number))
-          xml.send(:"credit-card-expiration", self.credit_card_expiration, inject_nil(self.credit_card_expiration))
-          xml.send(:"ad-code", self.ad_code, inject_nil(self.ad_code))
-          xml.send(:"continuity-flag", self.continuity_flag, inject_nil(self.continuity_flag))
-          xml.send(:"freight-terms", self.freight_terms, inject_nil(self.freight_terms))
-          xml.send(:"department", self.department, inject_nil(self.department))
-          xml.send(:"pay-terms", self.pay_terms, inject_nil(self.pay_terms))
-          xml.send(:"tax-percent", self.tax_percent, inject_nil(self.tax_percent))
-          xml.send(:"asn-qualifier", self.asn_qualifier, inject_nil(self.asn_qualifier))
-          xml.send(:"gift-order-indicator", self.gift_order_indicator, inject_nil(self.gift_order_indicator))
-          xml.send(:"order-source", self.order_source, inject_nil(self.order_source))
-          xml.send(:"promise-date", self.promise_date, inject_nil(self.promise_date))
-          xml.send(:"third-party-account", self.third_party_account, inject_nil(self.third_party_account))
-          xml.send(:"priority", self.priority, inject_nil(self.priority))
-          xml.send(:"retail-department", self.retail_department, inject_nil(self.retail_department))
-          xml.send(:"retail-store", self.retail_store, inject_nil(self.retail_store))
-          xml.send(:"retail-vendor", self.retail_vendor, inject_nil(self.retail_vendor))
-          xml.send(:"pool", self.pool, inject_nil(self.pool))
+      def add_store_information(order, address)
+        si = REXML::Element.new("store-information")
+        store_name = si.add_element("store-name", inject_nil(address.try(:name)))
+        store_name.text = REXML::CData.new(address.name) if address.try(:name)
+        store_addr1 = si.add_element("store-address1", inject_nil(address.try(:address1)))
+        store_addr1.text = REXML::CData.new(address.address1) if address.try(:address1)
+        store_addr2 = si.add_element("store-address2", inject_nil(address.try(:address2)))
+        store_addr2.text = REXML::CData.new(address.address2) if address.try(:address2)
+        store_city = si.add_element("store-city", inject_nil(address.try(:city)))
+        story_city.text = REXML::CData.new(address.city) if address.try(:city)
 
-          add_billing_or_shipping_information(xml, self.billing_information, 'billing')
-          add_billing_or_shipping_information(xml, self.shipping_information, 'shipping')
 
-          add_store_information(xml, self.store_information)
-
-          xml.send(:"custom-fields") do
-            for i in 1..5
-              xml.send(:"custom-field-#{i}", self.custom_fields[i], inject_nil(self.custom_fields[i]))
-            end
-          end
-
-          xml.send(:"line-items") do
-            Array(self.line_items).each_with_index do |line_item, index|
-              add_line_item(xml, line_item, index)
-            end
-          end
-
-        end
-      end
-
-      def add_billing_or_shipping_information(xml, address, pref = 'billing')
-        xml.send(:"#{pref}-information") do
-          xml.send(:"#{pref}-customer-number", address.customer_number, inject_nil(address.customer_number))
-          xml.send(:"#{pref}-name") do
-            xml.cdata address.name
-          end
-          xml.send(:"#{pref}-company", inject_nil(address.company)) do
-            xml.cdata address.company if address.company
-          end
-          xml.send(:"#{pref}-address1") do
-            xml.cdata address.address1
-          end
-          xml.send(:"#{pref}-address2", inject_nil(address.address2)) do
-            xml.cdata address.address2 if address.address2
-          end
-          xml.send(:"#{pref}-address3", inject_nil(address.address3)) do
-            xml.cdata address.address3 if address.address3
-          end
-          xml.send(:"#{pref}-city") do
-            xml.cdata address.city
-          end
-          xml.send(:"#{pref}-state", address.state)
-          xml.send(:"#{pref}-zip", address.zip)
-          xml.send(:"#{pref}-country", address.country, inject_nil(address.country))
-          xml.send(:"#{pref}-iso-country-code", address.iso_country_code) if pref == 'shipping'
-          xml.send(:"#{pref}-phone", address.phone, inject_nil(address.phone))
-          xml.send(:"#{pref}-email", address.email, inject_nil(address.email))
-        end
-      end
-
-      def add_store_information(xml, address)
-        xml.send(:"store-information") do
-          xml.send(:"store-name", inject_nil(address.try(:name))) do
-            xml.cdata address.name if address.try(:name)
-          end
-          xml.send(:"store-address1", inject_nil(address.try(:address1))) do
-            xml.cdata address.try(:address1)
-          end
-          xml.send(:"store-address2", inject_nil(address.try(:address2))) do
-            xml.cdata address.try(:address2)
-          end
-          xml.send(:"store-city", inject_nil(address.try(:city))) do
-            xml.cdata address.try(:city)
-          end
-          xml.send(:"store-state", address.try(:state), inject_nil(address.try(:state)))
-          xml.send(:"store-zip", address.try(:zip), inject_nil(address.try(:zip)))
-          xml.send(:"store-country", address.try(:country), inject_nil(address.try(:country)))
-          xml.send(:"store-phone", address.try(:phone), inject_nil(address.try(:phone)))
-        end
-      end
-
-      def add_line_item(xml, line_item, index)
-        xml.send(:"line-item") do
-          xml.send(:"sku", line_item.sku)
-          xml.send(:"quantity", line_item.quantity)
-          xml.send(:"tax", line_item.tax)
-          xml.send(:"price", line_item.price)
-          xml.send(:"shipping-handling", line_item.shipping_handling)
-          xml.send(:"client-item", line_item.client_item, inject_nil(line_item.client_item))
-          xml.send(:"line-number", line_item.line_number)
-          xml.send(:"gift-box-wrap-quantity", line_item.gift_box_wrap_quantity, inject_nil(line_item.gift_box_wrap_quantity))
-          xml.send(:"gift-box-wrap-type", line_item.gift_box_wrap_type, inject_nil(line_item.gift_box_wrap_type))
-        end
+        si.add_element("store-state", inject_nil(address.try(:state))).text = address.try(:state)
+        si.add_element("store-zip", inject_nil(address.try(:zip))).text = address.try(:zip)
+        si.add_element("store-country", inject_nil(address.try(:country))).text = address.try(:country)
+        si.add_element("store-phone", inject_nil(address.try(:phone))).text = address.try(:phone)
+        order.elements << si
       end
     end
 
     class LineItem
       include ::ActiveModel::Model
       include ::ActiveModel::Validations
+
+      include XMLHelper
 
       attr_accessor :sku,
                     :quantity,
@@ -420,11 +370,28 @@ module ActiveFulfillment
       def shipping_handling
         @shipping_handling || 0
       end
+
+      def to_rexml
+        el = REXML::Element.new("line-item")
+        el.add_element("sku").text = sku
+        el.add_element("quantity").text = quantity
+
+        el.add_element("tax").text = tax
+        el.add_element("price").text = price
+        el.add_element("shipping-handling").text = shipping_handling
+        el.add_element("client-item", inject_nil(client_item)).text = client_item
+        el.add_element("line-number").text = line_number
+        el.add_element("gift-box-wrap-quantity", inject_nil(gift_box_wrap_quantity)).text = gift_box_wrap_quantity
+        el.add_element("gift-box-wrap-type", inject_nil(gift_box_wrap_type)).text = gift_box_wrap_type
+        el
+      end
     end
 
     class Address
       include ::ActiveModel::Model
       include ::ActiveModel::Validations
+
+      include XMLHelper
 
       attr_accessor :customer_number,
                     :name,
@@ -450,6 +417,29 @@ module ActiveFulfillment
       validates_length_of :address2, :address3, maximum: 30, allow_blank: true
       validates_length_of :country, maximum: 2, allow_blank: true
       validates :phone, presence: true, length: {maximum: 19}, if: -> { country.present? }
+
+      def to_rexml(prefix)
+        el = REXML::Element.new("#{prefix}-information")
+        el.add_element("#{prefix}-customer-number", inject_nil(customer_number)).text = customer_number
+        el.add_element("#{prefix}-name").text = REXML::CData.new(name)
+        c_el = el.add_element("#{prefix}-company", inject_nil(company))
+        c_el.text = REXML::CData.new(company) if company
+        el.add_element("#{prefix}-address1").text = REXML::CData.new(address1)
+        ad2 = el.add_element("#{prefix}-address2", inject_nil(address2))
+        ad2.text = REXML::CData.new(address2) if address2
+        ad3 = el.add_element("#{prefix}-address3", inject_nil(address3))
+        ad3.text = REXML::CData.new(address3) if address3
+        el.add_element("#{prefix}-city").text = REXML::CData.new(city)
+        el.add_element("#{prefix}-state").text = state
+        el.add_element("#{prefix}-zip").text = zip
+        el.add_element("#{prefix}-country", inject_nil(country)).text = country
+        if prefix == "shipping"
+          el.add_element("#{prefix}-iso-country-code").text = iso_country_code
+        end
+        el.add_element("#{prefix}-phone", inject_nil(phone)).text = phone
+        el.add_element("#{prefix}-email", inject_nil(email)).text = email
+        el
+      end
     end
 
   end

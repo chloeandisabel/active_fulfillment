@@ -58,7 +58,7 @@ class PostOrderTest < Minitest::Test
     }
 
     @post_order = PostOrder.new(@order)
-    @order_doc = Nokogiri.XML(@post_order.to_xml)
+    @order_doc = REXML::Document.new(@post_order.to_xml)
   end
 
   def test_address_validation
@@ -83,109 +83,115 @@ class PostOrderTest < Minitest::Test
   end
 
   def test_post_order_top_level_serialization
-    order = @order_doc.xpath("//order")
+    order = REXML::XPath.first(@order_doc, "//order")
 
-    assert order.at('.//cancel-date').attributes["nil"]
+    assert_equal @order[:order_number], order.elements["//order-number"].text
+    assert_equal @order[:order_date], order.elements["//order-date"].text
+    assert_equal @order[:ship_method], order.elements["//ship-method"].text
+    assert_equal order.elements["//declared-value"].text, '0'
+    assert_equal order.elements["//total-tax"].text, '0'
+    assert_equal order.elements["//total-shipping-handling"].text, '0'
+    assert_equal order.elements["//total-discount"].text, '0'
+    assert_equal order.elements["//total-order-amount"].text, '0'
+    assert_equal order.elements["//department"].text, '01'
+    assert_equal order.elements["//promise-date"].text, '2015-05-14'
 
-    assert_equal order.at('.//order-number').text, @order[:order_number]
-    assert_equal order.at('.//order-date').text, @order[:order_date]
-    assert_equal order.at('.//ship-method').text, @order[:ship_method]
-    assert_equal order.at('.//ship_via').text, ''
-    assert_equal order.at('.//special-instructions').text, ''
-    assert_equal order.at('.//special-messaging').text, ''
-    assert_equal order.at('.//drop-ship').text, ''
-    assert_equal order.at('.//invoice-number').text, ''
-    assert_equal order.at('.//ok-partial-ship').text, ''
-    assert_equal order.at('.//declared-value').text, '0'
-    assert_equal order.at('.//total-tax').text, '0'
-    assert_equal order.at('.//total-shipping-handling').text, '0'
-    assert_equal order.at('.//total-discount').text, '0'
-    assert_equal order.at('.//total-order-amount').text, '0'
-    assert_equal order.at('.//po-number').text, ''
-    assert_equal order.at('.//salesman').text, ''
-    assert_equal order.at('.//credit-card-number').text, ''
-    assert_equal order.at('.//credit-card-expiration').text, ''
-    assert_equal order.at('.//ad-code').text, ''
-    assert_equal order.at('.//continuity-flag').text, ''
-    assert_equal order.at('.//freight-terms').text, ''
-    assert_equal order.at('.//department').text, '01'
-    assert_equal order.at('.//pay-terms').text, ''
-    assert_equal order.at('.//tax-percent').text, ''
-    assert_equal order.at('.//asn-qualifier').text, ''
-    assert_equal order.at('.//gift-order-indicator').text, ''
-    assert_equal order.at('.//order-source').text, ''
-    assert_equal order.at('.//promise-date').text, '2015-05-14'
-    assert_equal order.at('.//third-party-account').text, ''
-    assert_equal order.at('.//priority').text, ''
-    assert_equal order.at('.//retail-department').text, ''
-    assert_equal order.at('.//retail-store').text, ''
-    assert_equal order.at('.//retail-vendor').text, ''
-    assert_equal order.at('.//pool').text, ''
+    assert order.elements["//cancel-date"].attributes["nil"]
+    assert order.elements["//ship-via"].attributes["nil"]
+    assert order.elements["//special-instructions"].attributes["nil"]
+    assert order.elements["//special-messaging"].attributes["nil"]
+    assert order.elements["//drop-ship"].attributes["nil"]
+    assert order.elements["//invoice-number"].attributes["nil"]
+    assert order.elements["//ok-partial-ship"].attributes["nil"]
+    assert order.elements["//po-number"].attributes["nil"]
+    assert order.elements["//salesman"].attributes["nil"]
+    assert order.elements["//credit-card-number"].attributes["nil"]
+    assert order.elements["//credit-card-expiration"].attributes["nil"]
+    assert order.elements["//ad-code"].attributes["nil"]
+    assert order.elements["//continuity-flag"].attributes["nil"]
+    assert order.elements["//freight-terms"].attributes["nil"]
+    assert order.elements["//pay-terms"].attributes["nil"]
+    assert order.elements["//tax-percent"].attributes["nil"]
+    assert order.elements["//asn-qualifier"].attributes["nil"]
+    assert order.elements["//gift-order-indicator"].attributes["nil"]
+    assert order.elements["//order-source"].attributes["nil"]
+    assert order.elements["//third-party-account"].attributes["nil"]
+    assert order.elements["//priority"].attributes["nil"]
+    assert order.elements["//retail-department"].attributes["nil"]
+    assert order.elements["//retail-store"].attributes["nil"]
+    assert order.elements["//retail-vendor"].attributes["nil"]
+    assert order.elements["//pool"].attributes["nil"]
 
     for i in 1..5
-      assert_equal order.at(".//custom-field-#{i}").text, ''
+      assert order.elements["//custom-field-#{i}"].attributes["nil"]
     end
   end
 
   def test_post_order_store_information_serialization
-    order = @order_doc.xpath("//order")
+    order = REXML::XPath.first(@order_doc, "//order")
 
-    store_information = order.at('.//store-information')
-    assert_equal store_information.at('.//store-name').text, ''
-    assert_equal store_information.at('.//store-address1').text, ''
-    assert_equal store_information.at('.//store-address2').text, ''
-    assert_equal store_information.at('.//store-city').text, ''
-    assert_equal store_information.at('.//store-state').text, ''
-    assert_equal store_information.at('.//store-country').text, ''
-    assert_equal store_information.at('.//store-zip').text, ''
-    assert_equal store_information.at('.//store-phone').text, ''
+    store_information = REXML::XPath.first(order, "//store-information")
+    assert store_information.elements['.//store-name'].attributes["nil"]
+    assert store_information.elements['.//store-address1'].attributes["nil"]
+    assert store_information.elements['.//store-address2'].attributes["nil"]
+    assert store_information.elements['.//store-city'].attributes["nil"]
+    assert store_information.elements['.//store-state'].attributes["nil"]
+    assert store_information.elements['.//store-country'].attributes["nil"]
+    assert store_information.elements['.//store-zip'].attributes["nil"]
+    assert store_information.elements['.//store-phone'].attributes["nil"]
   end
 
   def test_post_order_billing_and_shipping_information_serialization
-    order = @order_doc.xpath("//order")
+    order = REXML::XPath.first(@order_doc, "//order")
 
-    billing_information = order.at('.//billing-information')
-    assert_equal billing_information.at('.//billing-customer-number').text, ""
-    assert_equal billing_information.at('.//billing-name').text, @order[:billing_information][:name]
-    assert_equal billing_information.at('.//billing-company').text, ''
-    assert_equal billing_information.at('.//billing-address1').text, @order[:billing_information][:address1]
-    assert_equal billing_information.at('.//billing-address2').text, ''
-    assert_equal billing_information.at('.//billing-address3').text, ''
-    assert_equal billing_information.at('.//billing-phone').text, ''
-    assert_equal billing_information.at('.//billing-email').text, ''
-    assert_equal billing_information.at('.//billing-city').text, @order[:billing_information][:city]
-    assert_equal billing_information.at('.//billing-state').text, @order[:billing_information][:state]
-    assert_equal billing_information.at('.//billing-country').text, ""
-    assert_equal billing_information.at('.//billing-zip').text, @order[:billing_information][:zip]
+    billing_information = order.elements[".//billing-information"]
+    expected = @order[:billing_information]
+    assert billing_information.elements[".//billing-customer-number"].attributes["nil"]
+    assert billing_information.elements[".//billing-company"].attributes["nil"]
+    assert billing_information.elements[".//billing-address2"].attributes["nil"]
+    assert billing_information.elements[".//billing-address3"].attributes["nil"]
+    assert billing_information.elements[".//billing-phone"].attributes["nil"]
+    assert billing_information.elements[".//billing-email"].attributes["nil"]
+    assert billing_information.elements[".//billing-country"].attributes["nil"]
 
-    shipping_information = order.at('.//shipping-information')
-    assert_equal shipping_information.at('.//shipping-customer-number').text, @order[:shipping_information][:customer_number]
-    assert_equal shipping_information.at('.//shipping-name').text, @order[:shipping_information][:name]
-    assert_equal shipping_information.at('.//shipping-company').text, ''
-    assert_equal shipping_information.at('.//shipping-address1').text, @order[:shipping_information][:address1]
-    assert_equal shipping_information.at('.//shipping-address2').text, ''
-    assert_equal shipping_information.at('.//shipping-address3').text, ''
-    assert_equal shipping_information.at('.//shipping-phone').text, ''
-    assert_equal shipping_information.at('.//shipping-email').text, ''
-    assert_equal shipping_information.at('.//shipping-city').text, @order[:shipping_information][:city]
-    assert_equal shipping_information.at('.//shipping-state').text, @order[:shipping_information][:state]
-    assert_equal shipping_information.at('.//shipping-country').text, @order[:shipping_information][:country]
-    assert_equal shipping_information.at('.//shipping-zip').text, @order[:shipping_information][:zip]
+    assert_equal expected[:name], billing_information.elements[".//billing-name"].text
+    assert_equal expected[:address1], billing_information.elements['.//billing-address1'].text
+    assert_equal expected[:city], billing_information.elements[".//billing-city"].text
+    assert_equal expected[:state], billing_information.elements[".//billing-state"].text
+    assert_equal expected[:zip], billing_information.elements[".//billing-zip"].text
+
+    shipping_information = order.elements[".//shipping-information"]
+    expected = @order[:shipping_information]
+    assert shipping_information.elements[".//shipping-company"].attributes["nil"]
+    assert shipping_information.elements[".//shipping-address2"].attributes["nil"]
+    assert shipping_information.elements[".//shipping-address3"].attributes["nil"]
+    assert shipping_information.elements[".//shipping-phone"].attributes["nil"]
+    assert shipping_information.elements[".//shipping-email"].attributes["nil"]
+
+    assert_equal expected[:customer_number], shipping_information.elements[".//shipping-customer-number"].text
+    assert_equal expected[:name], shipping_information.elements[".//shipping-name"].text
+    assert_equal expected[:address1], shipping_information.elements[".//shipping-address1"].text
+    assert_equal expected[:city], shipping_information.elements[".//shipping-city"].text
+    assert_equal expected[:state], shipping_information.elements[".//shipping-state"].text
+    assert_equal expected[:country], shipping_information.elements[".//shipping-country"].text
+    assert_equal expected[:zip], shipping_information.elements[".//shipping-zip"].text
   end
 
   def test_post_order_line_item_serialization
-    order = @order_doc.xpath("//order")
+    order = REXML::XPath.first(@order_doc, "//order")
 
-    line_item = order.at('.//line-item')
-    assert_equal line_item.at('.//sku').text, @order[:line_items].first[:sku]
-    assert_equal line_item.at('.//quantity').text, @order[:line_items].first[:quantity].to_s
-    assert_equal line_item.at('.//price').text, @order[:line_items].first[:price].to_s
-    assert_equal line_item.at('.//tax').text, @order[:line_items].first[:tax].to_s
-    assert_equal line_item.at('.//shipping-handling').text, @order[:line_items].first[:shipping_handling].to_s
-    assert_equal line_item.at('.//client-item').text, ''
-    assert_equal line_item.at('.//line-number').text, @order[:line_items].first[:line_number].to_s
-    assert_equal line_item.at('.//gift-box-wrap-quantity').text, ''
-    assert_equal line_item.at('.//gift-box-wrap-type').text, ''
+    line_item = REXML::XPath.first(order, '//line-item')
+    expected = @order[:line_items].first
+    assert_equal expected[:sku], line_item.elements["//sku"].text
+    assert_equal expected[:quantity].to_s, line_item.elements["//quantity"].text
+    assert_equal expected[:price].to_s, line_item.elements['.//price'].text
+    assert_equal expected[:tax].to_s, line_item.elements['.//tax'].text
+    assert_equal expected[:shipping_handling].to_s, line_item.elements['.//shipping-handling'].text
+    assert_equal expected[:line_number].to_s, line_item.elements['.//line-number'].text
+
+    assert line_item.elements["//client-item"].attributes["nil"]
+    assert line_item.elements['.//gift-box-wrap-quantity'].attributes["nil"]
+    assert line_item.elements['.//gift-box-wrap-type'].attributes["nil"]
   end
 
   def test_post_order_response_serialization

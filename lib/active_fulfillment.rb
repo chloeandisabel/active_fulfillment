@@ -37,7 +37,6 @@ end
 require 'active_model'
 
 require 'builder'
-require 'nokogiri'
 require 'cgi'
 require 'net/https'
 require 'rexml/document'
