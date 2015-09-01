@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <items>
+    <item>
+      <sku>text</sku>
+      <desciption>text</desciption>
+      <product_group>text</product_group>
+      <quantity_available>0</quantity_available>
+      <quantity_onhand>0</quantity_onhand>
+      <quantity_demand>0</quantity_demand>
+      <quantity_backordered>0</quantity_backordered>
+      <quantity_pending>0</quantity_pending>
+      <quantity_unavailable>0</quantity_unavailable>
+      <quantity_reserved>0</quantity_reserved>
+    </item>
+  </items>
+</response>

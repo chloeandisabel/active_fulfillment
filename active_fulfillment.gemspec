@@ -31,4 +31,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency('minitest', '>= 4.7')
   s.add_development_dependency('timecop')
   s.add_development_dependency('byebug')
+  s.add_development_dependency('simplecov')
 end

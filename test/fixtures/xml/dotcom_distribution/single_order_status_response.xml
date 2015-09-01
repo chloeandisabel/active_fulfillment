@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <orders>
+    <order>
+      <client-order-number>text</client-order-number>
+      <dcd-order-number>text</dcd-order-number>
+      <dcd-order-suffix>text</dcd-order-suffix>
+      <order-status>text</order-status>
+      <ship_date>2010-03-04</ship_date>
+    </order>
+  </orders>
+</response>
