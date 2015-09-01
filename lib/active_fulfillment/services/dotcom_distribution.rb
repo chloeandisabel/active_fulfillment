@@ -55,7 +55,7 @@ module ActiveFulfillment
     #
     def method_missing(method_sym, *arguments, &block)
       if SERVICE_ENDPOINTS.keys.include?(method_sym)
-        self.send(:commit, method_sym, nil, :get, arguments.first)
+        self.send(:get, method_sym, nil, arguments.first)
       else
         super
       end
@@ -96,12 +96,12 @@ module ActiveFulfillment
         line_items: line_items,
       }
       data = SERVICE_ENDPOINTS[:fulfillment][1].new(args.merge(options))
-      commit :fulfillment, nil, :post, data
+      commit :fulfillment, nil, data
     end
 
     def fetch_stock_levels(options = {})
       options = options.dup
-      commit :fetch_stock_levels, options.delete(:item_id), :get, options
+      get :fetch_stock_levels, options.delete(:item_id), options
     end
 
     def fetch_tracking_data(order_ids, options = {})
@@ -109,38 +109,40 @@ module ActiveFulfillment
       unless order_id
         requires!(options, :fromShipDate, :toShipDate, :dept, :kitonly)
       end
-      commit :fetch_tracking_data, order_id, :get, options
+      get :fetch_tracking_data, order_id, options
     end
 
     # Tell Dotcom that stock is being sent to their warehouse.
+    # TODO: this may need to take purchase_order as argument instead of option..
+    # Check required arguments by dotcom
     def purchase_order(options = {})
-      commit :purchase_order, nil, :post, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
+      commit :purchase_order, nil, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
     end
 
     def order_status(options = {})
       options = options.dup
-      order_id = options.delete(:order_number)
-      unless order_id
+      order_number = options.delete(:order_number)
+      unless order_number
         requires!(options, :fromOrdDate, :toOrdDate)
       end
-      commit :order_status, order_id, :get, options
+      get :order_status, order_number, options
     end
 
     def returns(options = {})
       requires!(options, :fromReturnDate, :toReturnDate)
-      commit :returns, nil, :get, options
+      get :returns, nil, options
     end
 
     # +post_item+ and +purchase_order+ are used to let Dotcom know
     # about our products / SKUs.  If you attempt to place an order
     # with a SKU that Dotcom is not aware of, "you're gonna have a bad day!"
     def post_item(options = {})
-      commit :post_item, nil, :post, SERVICE_ENDPOINTS[:post_item][1].new(options)
+      commit :post_item, nil, SERVICE_ENDPOINTS[:post_item][1].new(options)
     end
 
     def item_summary(options={})
       options = options.dup
-      commit :item_summary, options.delete(:sku), :get, options
+      get :item_summary, options.delete(:sku), options
     end
 
     def test_mode?
@@ -157,28 +159,29 @@ module ActiveFulfillment
       path
     end
 
-    def commit(action, resource=nil, verb = :get, data = nil)
+    def get(action, resource=nil, query_hash=nil)
       url = base_url + path_for(action, resource)
-      if verb == :get
-        if data
-          params = data.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
-          unless params.empty?
-            url += "?#{params.join("&")}"
-          end
+      if query_hash
+        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
+        unless query.empty?
+          url += "?#{query.join("&")}"
         end
-        response = ssl_get(url.to_s, build_headers(url))
+      end
+      parse_response(action, ssl_get(url.to_s, build_headers(url)))
+    end
+
+    def commit(action, resource=nil, data = nil)
+      url = base_url + path_for(action, resource)
+      # Because all our classes mixin ActiveModel::Validations
+      # we can validate our request in this manner which will
+      # add to the errors array
+      if data && data.valid?
+        response = ssl_post(url, data.to_xml, build_headers(url))
       else
-        # Because all our classes mixin ActiveModel::Validations
-        # we can validate our request in this manner which will
-        # add to the errors array
-        if data && data.valid?
-          response = ssl_post(url, data.to_xml, build_headers(url))
-        else
-          # TODO: Not sure what to do with the second argument +message+
-          #  in this response. The relevant data is in +data+. I don't know if
-          #  I would remove it for fear of breaking functionality.
-          return Response.new(false, '', {data: data.errors})
-        end
+        # TODO: Not sure what to do with the second argument +message+
+        #  in this response. The relevant data is in +data+. I don't know if
+        #  I would remove it for fear of breaking functionality.
+        return Response.new(false, '', {data: data.errors})
       end
 
       parse_response(action, response)
