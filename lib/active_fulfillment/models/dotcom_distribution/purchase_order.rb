@@ -24,10 +24,13 @@ module ActiveFulfillment
       validates :items, item: true
 
       def items=(attributes)
-        @items ||= []
         attributes.each do |params|
-          @items.push(PostItem.new(params))
+          items.push(PostItem.new(params))
         end
+      end
+
+      def items
+        @items ||= []
       end
 
       def to_xml
@@ -46,7 +49,7 @@ module ActiveFulfillment
           xml.send(:"priority-date", self.priority_date)
           xml.send(:"expected-on-dock", self.expected_on_dock)
           xml.send(:"items") do
-            Array(self.items).each do |item|
+            Array(items).each do |item|
               item.send(:item_to_xml, xml)
             end
           end
