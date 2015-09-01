@@ -3,6 +3,12 @@ require 'test_helper'
 class RemoteDotcomIntegrationTest < Minitest::Test
   include ActiveFulfillment::Test::Fixtures
 
+  DOTCOM_MANUAL_TEST = "Dotcom requires manual testing for this item".freeze
+
+  def requires_manual_test!
+    skip DOTCOM_MANUAL_TEST unless ENV["DOTCOM_MANUAL_TEST"]
+  end
+
   def setup
     ActiveFulfillment::Base.mode = :test
     @service = ActiveFulfillment::DotcomDistributionService.new(fixtures(:dotcom_distribution))
@@ -81,12 +87,14 @@ class RemoteDotcomIntegrationTest < Minitest::Test
   end
 
   def test_successful_create_order
+    requires_manual_test!
     response = @service.fulfill(SecureRandom.hex(10), @address, @line_items, @options)
     # TODO: This requires the item in @line_items to exist
     assert_nil response
   end
 
   def test_order_multiple_line_items
+    requires_manual_test!
     @line_items.push({
       sku: "Test 2",
       line_number: 1,
@@ -121,6 +129,7 @@ class RemoteDotcomIntegrationTest < Minitest::Test
   end
 
   def test_get_inventory
+    requires_manual_test!
     # TODO: test with some inventory data. Currently returns empty
     response = @service.inventory_snapshot(invDate: Date.today.to_s)
     assert response.success?
@@ -128,6 +137,7 @@ class RemoteDotcomIntegrationTest < Minitest::Test
   end
 
   def test_returns
+    requires_manual_test!
     response = @service.returns(fromReturnDate: "2001-01-01", toReturnDate: Date.today.to_s)
     assert response.success?
     refute_empty response.data
