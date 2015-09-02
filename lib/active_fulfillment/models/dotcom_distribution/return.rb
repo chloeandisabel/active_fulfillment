@@ -2,10 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class Return
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Serializers::Xml
-
+      include Model
       attr_accessor :dcd_return_number,
                     :department,
                     :original_order_number,
@@ -43,9 +40,7 @@ module ActiveFulfillment
     end
 
     class ReturnItem
-
-      include ::ActiveModel::Model
-
+      include Model
       attr_accessor :sku,
                     :quantity_returned,
                     :line_number,

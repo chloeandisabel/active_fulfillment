@@ -1,5 +1,7 @@
 require 'cgi'
 
+require 'active_fulfillment/models/dotcom_distribution'
+
 module ActiveFulfillment
 
   class DotcomDistributionService < Service
@@ -145,6 +147,11 @@ module ActiveFulfillment
       get :item_summary, options.delete(:sku), options
     end
 
+    def inventory_snapshot(options={})
+      requires!(options, :invDate)
+      get :inventory_snapshot, nil, options
+    end
+
     def test_mode?
       true
     end
@@ -159,32 +166,34 @@ module ActiveFulfillment
       path
     end
 
-    def get(action, resource=nil, query_hash=nil)
-      url = base_url + path_for(action, resource)
-      if query_hash
-        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
-        unless query.empty?
-          url += "?#{query.join("&")}"
-        end
+    def get(action, resource=nil, query_hash={})
+      query = ""
+      if query_hash && query_hash.present?
+        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }.join("&")
       end
-      parse_response(action, ssl_get(url.to_s, build_headers(url)))
+
+      make_request(:get, action, resource, query: query)
     end
 
     def commit(action, resource=nil, data = nil)
-      url = base_url + path_for(action, resource)
-      # Because all our classes mixin ActiveModel::Validations
-      # we can validate our request in this manner which will
-      # add to the errors array
-      if data && data.valid?
-        response = ssl_post(url, data.to_xml, build_headers(url))
-      else
-        # TODO: Not sure what to do with the second argument +message+
-        #  in this response. The relevant data is in +data+. I don't know if
-        #  I would remove it for fear of breaking functionality.
-        return Response.new(false, '', {data: data.errors})
-      end
+      make_request(:post, action, resource, data: data)
+    end
 
+    def make_request(verb, action, resource, query: nil, data: nil)
+      url = base_url + path_for(action, resource)
+      if query && query.present?
+        url += "?#{query}"
+      end
+      data = data ? data.to_xml : nil
+
+      response = ssl_request(verb, url, data, build_headers(url))
       parse_response(action, response)
+    rescue ActiveUtils::ResponseError => e
+      response = {
+        http_code: e.response.code,
+        http_message: e.response.message,
+      }
+      Response.new(false, e.response.message, response)
     end
 
     def parse_response(action, xml)

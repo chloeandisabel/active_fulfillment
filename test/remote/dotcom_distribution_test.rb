@@ -128,9 +128,9 @@ class RemoteDotcomIntegrationTest < Minitest::Test
     refute_empty response.data
   end
 
-  def test_get_inventory
+  def test_get_inventory_snapshot
     requires_manual_test!
-    # TODO: test with some inventory data. Currently returns empty
+
     response = @service.inventory_snapshot(invDate: Date.today.to_s)
     assert response.success?
     refute_empty response.data

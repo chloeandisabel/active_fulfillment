@@ -2,20 +2,12 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class ShipMethod
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-      include ::ActiveModel::Serializers::Xml
+      include Model
 
       attr_accessor :carrier,
                     :service,
                     :shipping_code,
                     :shipping_description
-
-      validates_length_of :carrier, maximum: 20, allow_blank: false
-      validates_length_of :service, maximum: 20, allow_blank: false
-      validates_length_of :shipping_code, maximum: 40, allow_blank: false
-      validates_length_of :shipping_description, maximum: 300, allow_blank: false
 
       def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []

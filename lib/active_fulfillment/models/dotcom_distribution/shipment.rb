@@ -2,10 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class Shipment
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-      include ::ActiveModel::Serializers::Xml
+      include Model
 
       attr_accessor :client_order_number,
                     :customer_number,
@@ -78,7 +75,7 @@ module ActiveFulfillment
     end
 
     class ShipItem
-      include ::ActiveModel::Model
+      include Model
 
       attr_accessor :carrier,
                     :carton_id,
