@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
   s.summary = %q{Framework and tools for dealing with shipping, tracking and order fulfillment services.}
 
   s.add_dependency('activesupport', '>= 3.2.9')
-  s.add_dependency('activemodel', '>= 3.2.9')
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('nokogiri', '>= 1.6')
   s.add_dependency('active_utils', '~> 3.0')

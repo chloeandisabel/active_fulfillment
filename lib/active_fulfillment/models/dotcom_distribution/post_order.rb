@@ -17,10 +17,7 @@ module ActiveFulfillment
     #   Is a Y/N field.  If you pass us Y and we display prices on your
     #   invoice we will suppress printing the price and values.
     class PostOrder
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-      include ::ActiveModel::Serializers::Xml
+      include Model
 
       attr_accessor :order_number,
                     :order_date,
@@ -104,70 +101,6 @@ module ActiveFulfillment
          ["DHL NEXT DATE 12:00", "45"],
         ].inject({}){|h, (k,v)| h[k] = v; h}
       end
-
-      # Date expected in format yyyy-mm-dd
-      DATE_REGEX = /\d{4}-\d{2}-\d{2}/
-
-      validates_format_of :ship_date, :order_date, with: DATE_REGEX
-      validates_format_of :cancel_date, with: DATE_REGEX, allow_nil: true
-      validates_format_of :credit_card_expiration, with: /\d{2}\d{2}/, allow_nil: true
-
-      validates_length_of :order_number, :in => 1..20, allow_blank: false
-      validates_length_of :ship_via, maximum: 20, allow_blank: true
-      validates_length_of :drop_ship, maximum: 1, allow_blank: true
-      validates_length_of :pool, maximum: 24, allow_blank: true
-      validates_length_of :ok_partial_ship, maximum: 1, allow_blank: true
-      validates_length_of :special_instructions, maximum: 40, allow_blank: true
-      validates_length_of :special_messaging,  maximum: 250, allow_blank: true
-      validates_length_of :po_number, maximum: 20, allow_blank: true
-      validates_length_of :salesman, maximum: 20, allow_blank: true
-      validates_length_of :credit_card_number, maximum: 32, allow_blank: true
-      validates_length_of :credit_card_expiration, maximum: 4, allow_blank: true
-      validates_length_of :ad_code, maximum: 5, allow_blank: true
-      validates_length_of :continuity_flag, maximum: 1, allow_blank: true
-      validates_length_of :freight_terms, maximum: 20, allow_blank: true
-      validates_length_of :department, maximum: 5, allow_blank: true
-      validates_length_of :pay_terms, maximum: 5, allow_blank: true
-      validates_length_of :asn_qualifier, maximum: 5, allow_blank: true
-      validates_length_of :order_source, maximum: 8, allow_blank: true
-      validates_length_of :third_party_account, maximum: 25, allow_blank: true
-      validates_length_of :priority, maximum: 5, allow_blank: true
-      validates_length_of :retail_department, maximum: 10, allow_blank: true
-      validates_length_of :retail_store, maximum: 10, allow_blank: true
-      validates_length_of :retail_vendor, maximum: 10, allow_blank: true
-
-      validates_inclusion_of :ship_method, in: :shipping_methods
-      validates_inclusion_of :gift_order_indicator, in: %w(Y N), allow_blank: true
-
-      validates_numericality_of :tax_percent, greater_than_or_equal_to: 0, less_than: 100, allow_nil: true
-      validates_numericality_of :total_tax, :total_shipping_handling, :total_order_amount, greater_than_or_equal_to: 0
-      validates_numericality_of :declared_value, less_than_or_equal_to: 99999999.99, allow_nil: true
-      validates_numericality_of :invoice_number, only_integer: true, less_than: 4294967296, allow_nil: true
-      validates_numericality_of :total_discount, greater_than_or_equal_to: 0, less_than: 100.00, allow_nil: true
-
-      class LineItemValidator < ActiveModel::EachValidator
-        def validate_each(record, attribute, value)
-          if record.line_items
-            record.line_items.each do |li|
-              record.errors[:line_items] << li.errors unless li.valid?
-            end
-          end
-        end
-      end
-
-      class BillingInformationValidator < ActiveModel::EachValidator
-        def validate_each(record, attribute, value)
-          if record.billing_information
-            unless record.billing_information.valid?
-              record.errors[:billing_information] << record.billing_information.errors
-            end
-          end
-        end
-      end
-
-      validates_presence_of :line_items, :billing_information
-      validates :line_items, line_item: true
-      validates :billing_information, billing_information: true
 
       def store_information=(attributes)
         @store_information = Address.new(attributes)
@@ -382,8 +315,7 @@ module ActiveFulfillment
     end
 
     class LineItem
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
+      include Model
 
       attr_accessor :sku,
                     :quantity,
@@ -394,20 +326,6 @@ module ActiveFulfillment
                     :line_number,
                     :gift_box_wrap_quantity,
                     :gift_box_wrap_type
-
-      # required arguments
-      validates_length_of :sku, maximum: 17, allow_blank: false
-      validates_length_of :line_number, maximum: 20, allow_blank: true
-      validates_length_of :client_item, maximum: 20, allow_blank: true
-      validates_numericality_of :quantity, only_integer: true, greater_than: 0
-      validates_numericality_of :tax, :price, greater_than_or_equal_to: 0,
-        less_than_or_equal_to: 99999.99
-      validates_numericality_of :shipping_handling, greater_than_or_equal_to: 0,
-        less_than_or_equal_to: 999999.99
-
-      validates_numericality_of :gift_box_wrap_quantity, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999999999, allow_nil: true
-      validates_numericality_of :gift_box_wrap_type, only_integer: true, greater_than: 0, less_than_or_equal_to: 9999, allow_nil: true
-      validates_numericality_of :line_number, only_integer: true, greater_than: 0, allow_nil: true
 
       def price
         @price || 0
@@ -423,9 +341,7 @@ module ActiveFulfillment
     end
 
     class Address
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-
+      include Model
       attr_accessor :customer_number,
                     :name,
                     :company,
@@ -439,17 +355,6 @@ module ActiveFulfillment
                     :iso_country_code,
                     :phone,
                     :email
-
-      # required arguments
-      validates_length_of :name, :address1, maximum: 30, allow_blank: false
-      validates_length_of :city, maximum: 20, allow_blank: false
-      validates_length_of :state, maximum: 2, allow_blank: false
-      validates_length_of :zip, maximum: 10, allow_blank: false
-
-      validates_length_of :customer_number, maximum: 19, allow_blank: true
-      validates_length_of :address2, :address3, maximum: 30, allow_blank: true
-      validates_length_of :country, maximum: 2, allow_blank: true
-      validates :phone, presence: true, length: {maximum: 19}, if: -> { country.present? }
     end
 
   end

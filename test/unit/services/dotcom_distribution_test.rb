@@ -68,7 +68,7 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_fulfillment_successful
     order_id = "12345678"
-    @service.expects(:ssl_post).with do |url, data, headers|
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
       url.end_with?("/" + @endpoints[:fulfillment].first) &&
         data.include?("<order-number>#{order_id}</order-number>")
     end.returns(successful_fulfillment_response)
@@ -79,7 +79,9 @@ class DotcomDistributionTest < Minitest::Test
   end
 
   def test_fulfillment_invalid_arguments
-    @service.expects(:ssl_post).returns(invalid_post_order_response)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(invalid_post_order_response)
     response = @service.fulfill("12345678", @address, @line_items, @options)
 
     refute response.success?
@@ -101,8 +103,9 @@ class DotcomDistributionTest < Minitest::Test
   end
 
   def test_get_inventory_for_all
-    @service.expects(:ssl_get).with do |url, data, headers|
-      url.end_with?(@endpoints[:fetch_stock_levels].first)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:fetch_stock_levels].first)
     end.returns(xml_fixture("dotcom_distribution/inventory_for_item"))
     response = @service.fetch_stock_levels
     assert response.success?
@@ -110,8 +113,9 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_get_inventory_for_item
     item_id = "12345"
-    @service.expects(:ssl_get).with do |url, data, headers|
-      url.end_with?(@endpoints[:fetch_stock_levels].first + "/" + item_id)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:fetch_stock_levels].first + "/" + item_id)
     end.returns(xml_fixture("dotcom_distribution/inventory_for_item"))
     response = @service.fetch_stock_levels(item_id: item_id)
     assert response.success?
@@ -119,8 +123,9 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_fetch_tracking_data
     order_id = "tracking_data_123456789"
-    @service.expects(:ssl_get).with do |url, data, headers|
-      url.end_with?(@endpoints[:fetch_tracking_data].first + "/" + order_id)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:fetch_tracking_data].first + "/" + order_id)
     end.returns(xml_fixture("dotcom_distribution/shipment_information_for_order"))
 
     response = @service.fetch_tracking_data([order_id])
@@ -132,8 +137,9 @@ class DotcomDistributionTest < Minitest::Test
   end
 
   def test_fetch_tracking_data_without_order_ids
-    @service.expects(:ssl_get).with do |url, data, headers|
-      url.end_with?(@endpoints[:fetch_tracking_data].first + "?fromShipDate=2010-1-1&toShipDate=2010-1-1&dept=A&kitonly=1")
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:fetch_tracking_data].first + "?fromShipDate=2010-1-1&toShipDate=2010-1-1&dept=A&kitonly=1")
     end.returns(xml_fixture("dotcom_distribution/shipment_information_for_order"))
 
     response = @service.fetch_tracking_data([], fromShipDate: "2010-1-1", toShipDate: "2010-1-1", dept: "A", kitonly: "1")
@@ -141,22 +147,27 @@ class DotcomDistributionTest < Minitest::Test
   end
 
   def test_purchase_order_successful
-    @service.expects(:ssl_post).returns(successful_purchase_order_response)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(successful_purchase_order_response)
     response = @service.purchase_order(po_number: "abc123")
     # TODO: we should be using Response.new success with success rather than nil
     assert_nil response
   end
 
   def test_purchase_order_invalid_purchase_order
-    @service.expects(:ssl_post).returns(invalid_purchase_order_response)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(invalid_purchase_order_response)
     response = @service.purchase_order(po_number: "foobar")
     refute response.success?
   end
 
   def test_order_status_successful_with_order_number
     order_number = "1234567890"
-    @service.expects(:ssl_get).with do |url, headers|
-      url.end_with?(@endpoints[:order_status].first + "/"+ order_number)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:order_status].first + "/"+ order_number)
     end.returns(xml_fixture("dotcom_distribution/single_order_status_response"))
     response = @service.order_status(order_number: order_number)
     assert response.success?
@@ -164,8 +175,9 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_order_status_successful_without_order_number
     query = { fromOrdDate: "2010-1-1", toOrdDate: "2010-1-1" }
-    @service.expects(:ssl_get).with do |url, headers|
-      url.end_with?(@endpoints[:order_status].first + "?" + query.to_query)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:order_status].first + "?" + query.to_query)
     end.returns(xml_fixture("dotcom_distribution/single_order_status_response"))
     response = @service.order_status(query)
     assert response.success?
@@ -177,8 +189,9 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_returns_successful
     query = { fromReturnDate: "2010-1-1", toReturnDate: "2010-1-1" }
-    @service.expects(:ssl_get).with do |url, headers|
-      url.end_with?(@endpoints[:returns].first + "?" + query.to_query)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:returns].first + "?" + query.to_query)
     end.returns(xml_fixture("dotcom_distribution/returns_response"))
     response = @service.returns(query)
     assert response.success?
@@ -189,28 +202,26 @@ class DotcomDistributionTest < Minitest::Test
   end
 
   def test_post_item_successful
-    @service.expects(:ssl_post).returns(successful_post_item_response)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(successful_post_item_response)
     response = @service.post_item(@item)
     # TODO: return a Response object rather than nil
     assert_nil response
   end
 
   def test_post_items_with_errors
-    @service.expects(:ssl_post).returns(invalid_post_item_response)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(invalid_post_item_response)
     response = @service.post_item(@item)
     refute response.success?
   end
 
-  def test_post_item_invalid_arguments
-    response = @service.post_item
-    refute response.success?
-    assert_instance_of ActiveModel::Errors, response.params["data"]
-    refute_empty response.params["data"].messages
-  end
-
   def test_item_summary_successful
-    @service.expects(:ssl_get).with do |url, headers|
-      url.end_with?(@endpoints[:item_summary].first)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:item_summary].first)
     end.returns(xml_fixture("dotcom_distribution/item_summary"))
     response = @service.item_summary
     assert response.success?
@@ -218,8 +229,9 @@ class DotcomDistributionTest < Minitest::Test
 
   def test_single_item_summary_successful
     sku = "ABC-123"
-    @service.expects(:ssl_get).with do |url, headers|
-      url.end_with?(@endpoints[:item_summary].first + "/" + sku)
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :get &&
+        url.end_with?(@endpoints[:item_summary].first + "/" + sku)
     end
     response = @service.item_summary(sku: sku)
     assert response.success?

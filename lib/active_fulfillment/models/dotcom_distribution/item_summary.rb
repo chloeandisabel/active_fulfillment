@@ -2,9 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class ItemSummary
-
-      include ::ActiveModel::Model
-
+      include Model
       attr_accessor :sku,
                     :description,
                     :last_receipt_date,
@@ -31,8 +29,7 @@ module ActiveFulfillment
     end
 
     class VendorItem
-      include ::ActiveModel::Model
-
+      include Model
       attr_accessor :cross_ref
     end
   end
