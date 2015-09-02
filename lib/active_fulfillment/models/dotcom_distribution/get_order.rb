@@ -2,9 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class GetOrder
-
-      include ::ActiveModel::Model
-
+      include Model
       attr_accessor :client_order_number,
                     :dcd_order_number,
                     :dcd_order_suffix,

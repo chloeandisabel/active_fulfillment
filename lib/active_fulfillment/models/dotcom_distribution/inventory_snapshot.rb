@@ -2,10 +2,6 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class InventorySnapshot
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Serializers::Xml
-
       attr_accessor :sku,
                     :description,
                     :quantity_bod,

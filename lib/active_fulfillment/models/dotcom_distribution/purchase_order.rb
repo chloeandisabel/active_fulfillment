@@ -2,26 +2,11 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class PurchaseOrder
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-
+      include Model
       attr_accessor :po_number,
                     :priority_date,
                     :expected_on_dock,
                     :items
-
-      validates_length_of :po_number, maximum: 30, allow_blank: false
-
-      class ItemValidator < ActiveModel::EachValidator
-        def validate_each(record, attribute, value)
-          record.items.each do |li|
-            record.errors[:items] << li.errors unless li.valid?
-          end
-        end
-      end
-
-      validates :items, item: true
 
       def items=(attributes)
         attributes.each do |params|
