@@ -2,6 +2,8 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class InventorySnapshot
+      include Model
+
       attr_accessor :sku,
                     :description,
                     :quantity_bod,
