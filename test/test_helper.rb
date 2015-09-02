@@ -1,5 +1,8 @@
 require 'bundler/setup'
 
+require 'simplecov'
+SimpleCov.start
+
 require 'active_fulfillment'
 
 require 'minitest/autorun'

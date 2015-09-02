@@ -1,5 +1,7 @@
 require 'cgi'
 
+require 'active_fulfillment/models/dotcom_distribution'
+
 module ActiveFulfillment
 
   class DotcomDistributionService < Service
@@ -23,7 +25,6 @@ module ActiveFulfillment
     #   action: self explanatory I think
     #   endpoint: DotCom's endpoint. for instance -> https://cwa.dotcomdistribution.com/dcd_api_test/DCDAPIService.svc/item
     #   class: The class that will parse our response
-
     SERVICE_ENDPOINTS = {
       fulfillment: ["order", PostOrder],
       purchase_order: ["purchase_order", PurchaseOrder],
@@ -35,31 +36,8 @@ module ActiveFulfillment
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
       item_summary: ["item", ItemSummary],
-      inventory_by_status: ["inventory_by_status"],
       inventory_snapshot: ["inventory_snapshot", InventorySnapshot],
-      stockstatus: ["stockstatus"],
-      receipt: ["receipt"],
-      nonpo_receipt: ["nonpo_receipt"],
-      backorder: ["backorder"],
-      billing_summary: ["billingsummary"],
-      billing_detail: ["billingdetail"],
-      receiving_sla: ["receiving_sla"]
     }
-
-    # Many of these get requests are handled by +method_missing+.
-    #
-    #  Example:
-    #    service = ActiveFulfillment::DotcomDistributionService.new({username: 'test', password: 'test'})
-    #    # or      ActiveFulfillment::Base.service('dotcom_distribution').new({username: 'test', password: 'test'})
-    #    service.receipt({fromReceiptDate: '2010-10-01', toReceiptDate: '2010-10-02'})
-    #
-    def method_missing(method_sym, *arguments, &block)
-      if SERVICE_ENDPOINTS.keys.include?(method_sym)
-        self.send(:commit, method_sym, nil, :get, arguments.first)
-      else
-        super
-      end
-    end
 
     attr_reader :base_url
 
@@ -96,12 +74,12 @@ module ActiveFulfillment
         line_items: line_items,
       }
       data = SERVICE_ENDPOINTS[:fulfillment][1].new(args.merge(options))
-      commit :fulfillment, nil, :post, data
+      commit :fulfillment, nil, data
     end
 
     def fetch_stock_levels(options = {})
       options = options.dup
-      commit :fetch_stock_levels, options.delete(:item_id), :get, options
+      get :fetch_stock_levels, options.delete(:item_id), options
     end
 
     def fetch_tracking_data(order_ids, options = {})
@@ -109,38 +87,45 @@ module ActiveFulfillment
       unless order_id
         requires!(options, :fromShipDate, :toShipDate, :dept, :kitonly)
       end
-      commit :fetch_tracking_data, order_id, :get, options
+      get :fetch_tracking_data, order_id, options
     end
 
     # Tell Dotcom that stock is being sent to their warehouse.
+    # TODO: this may need to take purchase_order as argument instead of option..
+    # Check required arguments by dotcom
     def purchase_order(options = {})
-      commit :purchase_order, nil, :post, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
+      commit :purchase_order, nil, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
     end
 
     def order_status(options = {})
       options = options.dup
-      order_id = options.delete(:order_number)
-      unless order_id
+      order_number = options.delete(:order_number)
+      unless order_number
         requires!(options, :fromOrdDate, :toOrdDate)
       end
-      commit :order_status, order_id, :get, options
+      get :order_status, order_number, options
     end
 
     def returns(options = {})
       requires!(options, :fromReturnDate, :toReturnDate)
-      commit :returns, nil, :get, options
+      get :returns, nil, options
     end
 
     # +post_item+ and +purchase_order+ are used to let Dotcom know
     # about our products / SKUs.  If you attempt to place an order
     # with a SKU that Dotcom is not aware of, "you're gonna have a bad day!"
     def post_item(options = {})
-      commit :post_item, nil, :post, SERVICE_ENDPOINTS[:post_item][1].new(options)
+      commit :post_item, nil, SERVICE_ENDPOINTS[:post_item][1].new(options)
     end
 
     def item_summary(options={})
       options = options.dup
-      commit :item_summary, options.delete(:sku), :get, options
+      get :item_summary, options.delete(:sku), options
+    end
+
+    def inventory_snapshot(options={})
+      requires!(options, :invDate)
+      get :inventory_snapshot, nil, options
     end
 
     def test_mode?
@@ -157,49 +142,39 @@ module ActiveFulfillment
       path
     end
 
-    def commit(action, resource=nil, verb = :get, data = nil)
-      url = base_url + path_for(action, resource)
-      if verb == :get
-        if data
-          params = data.collect { |k,v| "#{k}=#{CGI.escape(v)}" }
-          unless params.empty?
-            url += "?#{params.join("&")}"
-          end
-        end
-        response = ssl_get(url.to_s, build_headers(url))
-      else
-        # Because all our classes mixin ActiveModel::Validations
-        # we can validate our request in this manner which will
-        # add to the errors array
-        if data && data.valid?
-          response = ssl_post(url, data.to_xml, build_headers(url))
-        else
-          # TODO: Not sure what to do with the second argument +message+
-          #  in this response. The relevant data is in +data+. I don't know if
-          #  I would remove it for fear of breaking functionality.
-          return Response.new(false, '', {data: data.errors})
-        end
+    def get(action, resource=nil, query_hash={})
+      query = ""
+      if query_hash && query_hash.present?
+        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }.join("&")
       end
 
+      make_request(:get, action, resource, query: query)
+    end
+
+    def commit(action, resource=nil, data = nil)
+      make_request(:post, action, resource, data: data)
+    end
+
+    def make_request(verb, action, resource, query: nil, data: nil)
+      url = base_url + path_for(action, resource)
+      if query && query.present?
+        url += "?#{query}"
+      end
+      data = data ? data.to_xml : nil
+
+      response = ssl_request(verb, url, data, build_headers(url))
       parse_response(action, response)
+    rescue ActiveUtils::ResponseError => e
+      response = {
+        http_code: e.response.code,
+        http_message: e.response.message,
+      }
+      Response.new(false, e.response.message, response)
     end
 
     def parse_response(action, xml)
-      if SERVICE_ENDPOINTS[action].size == 2
-        klass = SERVICE_ENDPOINTS[action][1]
-        klass.response_from_xml(xml)
-      else
-        begin
-          klass = ("ActiveFulfillment::DotcomDistribution::" + (action.to_s.classify)).constantize
-          if klass.respond_to?(:response_from_xml)
-            klass.response_from_xml(xml)
-          else
-            raise "response_from_xml not implemented in #{klass}"
-          end
-        rescue NameError => e
-          raise ArgumentError, "Unknown action #{action}"
-        end
-      end
+      klass = SERVICE_ENDPOINTS[action][1]
+      klass.response_from_xml(xml)
     end
 
   end

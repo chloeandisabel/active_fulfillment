@@ -2,10 +2,6 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class Backorder
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Serializers::Xml
-
       attr_accessor :carrier,
                     :dcd_order_number,
                     :dcd_order_release_number,
@@ -55,8 +51,6 @@ module ActiveFulfillment
     end
 
     class BackorderItem
-      include ::ActiveModel::Model
-
       attr_accessor :vendor,
                     :sku,
                     :quantity_pending,

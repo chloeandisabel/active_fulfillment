@@ -34,8 +34,6 @@ begin
 rescue LoadError
 end
 
-require 'active_model'
-
 require 'builder'
 require 'nokogiri'
 require 'cgi'

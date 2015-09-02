@@ -2,9 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class PostItem
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
+      include Model
 
       attr_accessor :sku,
                     :description,
@@ -31,42 +29,6 @@ module ActiveFulfillment
                     :short_name,
                     :color,
                     :size
-
-      validates_numericality_of :weight, :avg_cost, :cost, :price, greater_than_or_equal_to: 0, less_than_or_equal_to: 9999.99, allow_nil: true
-      validates_numericality_of :package_qty, only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 999999, allow_nil: true
-
-      validates_numericality_of :client_product_class, only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 9999, allow_nil: true
-      validates_numericality_of :client_product_type, only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 9999, allow_nil: true
-
-      # Y = Serial Inbound
-      # N = Serial Outbound
-      # O = Outbound
-      validates_inclusion_of :serial_indicator, in: %w(Y N O), allow_blank: true
-
-      validates_numericality_of :master_pack, only_integer: true, allow_blank: true, maximum: 999999
-
-      validates_length_of :sku, maximum: 17, allow_blank: false
-      validates_length_of :description, maximum: 30, allow_blank: false
-      validates_length_of :root_sku, maximum: 17, allow_blank: true
-      validates_length_of :item_barcode, maximum: 24, allow_blank: true
-      validates_length_of :client_company, maximum: 5, allow_blank: true
-      validates_length_of :client_department, maximum: 5, allow_blank: true
-      validates_length_of :country_of_origin, maximum: 2, allow_blank: true
-      validates_length_of :long_description, maximum: 50, allow_blank: true
-      validates_length_of :harmonized_code, maximum: 10, allow_blank: true
-      validates_length_of :manufacturing_code, maximum: 10, allow_blank: true
-      validates_length_of :style_number, maximum: 10, allow_blank: true
-      validates_length_of :short_name, maximum: 15, allow_blank: true
-      validates_length_of :color, maximum: 5, allow_blank: true
-      validates_length_of :size, maximum: 5, allow_blank: true
-
-      class UpcValidator < ActiveModel::Validator
-        def validate(record)
-          # TODO: Validate Upc
-        end
-      end
-
-      validates_with UpcValidator, fields: [:upc]
 
       def self.response_from_xml(xml)
         success = true, message = '', hash = {}, records = []

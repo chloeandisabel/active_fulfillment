@@ -61,27 +61,6 @@ class PostOrderTest < Minitest::Test
     @order_doc = Nokogiri.XML(@post_order.to_xml)
   end
 
-  def test_address_validation
-    address = Address.new(address_attributes)
-    assert address.valid?
-    address.country = "CO"
-    refute address.valid?
-    address.phone = "1113334444"
-    assert address.valid?
-  end
-
-  def test_line_item_validation
-    line_item = LineItem.new(line_item_attributes)
-    assert line_item.valid?
-  end
-
-  def test_validate_post_order
-    @post_order = PostOrder.new(required_attributes)
-    @post_order.valid?
-    puts @post_order.line_items.first.errors.full_messages
-    assert @post_order.valid?, "got errors #{@post_order.errors.full_messages}"
-  end
-
   def test_post_order_top_level_serialization
     order = @order_doc.xpath("//order")
 

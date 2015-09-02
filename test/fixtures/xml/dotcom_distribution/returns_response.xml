@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <returns>
+    <return>
+      <items>
+        <item>
+          <sku>text</sku>
+          <quantity-returned>0</quantity-returned>
+          <line-number>0</line-number>
+          <item-disposition>text</item-disposition>
+          <returns-reason-code>0</returns-reason-code>
+        </item>
+      </items>
+      <department>text</department>
+      <original-order-number>text</original-order-number>
+      <dcd-return-number>0</dcd-return-number>
+      <return-date>1967-08-13</return-date>
+      <original-ship-date>1967-08-13</original-ship-date>
+    </return>
+  </returns>
+</response>

@@ -2,32 +2,20 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class PurchaseOrder
-
-      include ::ActiveModel::Model
-      include ::ActiveModel::Validations
-
+      include Model
       attr_accessor :po_number,
                     :priority_date,
                     :expected_on_dock,
                     :items
 
-      validates_length_of :po_number, maximum: 30, allow_blank: false
-
-      class ItemValidator < ActiveModel::EachValidator
-        def validate_each(record, attribute, value)
-          record.items.each do |li|
-            record.errors[:items] << li.errors unless li.valid?
-          end
+      def items=(attributes)
+        attributes.each do |params|
+          items.push(PostItem.new(params))
         end
       end
 
-      validates :items, item: true
-
-      def items=(attributes)
+      def items
         @items ||= []
-        attributes.each do |params|
-          @items.push(PostItem.new(params))
-        end
       end
 
       def to_xml
@@ -46,7 +34,7 @@ module ActiveFulfillment
           xml.send(:"priority-date", self.priority_date)
           xml.send(:"expected-on-dock", self.expected_on_dock)
           xml.send(:"items") do
-            Array(self.items).each do |item|
+            Array(items).each do |item|
               item.send(:item_to_xml, xml)
             end
           end
