@@ -25,7 +25,6 @@ module ActiveFulfillment
     #   action: self explanatory I think
     #   endpoint: DotCom's endpoint. for instance -> https://cwa.dotcomdistribution.com/dcd_api_test/DCDAPIService.svc/item
     #   class: The class that will parse our response
-
     SERVICE_ENDPOINTS = {
       fulfillment: ["order", PostOrder],
       purchase_order: ["purchase_order", PurchaseOrder],
@@ -37,31 +36,8 @@ module ActiveFulfillment
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
       item_summary: ["item", ItemSummary],
-      inventory_by_status: ["inventory_by_status"],
       inventory_snapshot: ["inventory_snapshot", InventorySnapshot],
-      stockstatus: ["stockstatus"],
-      receipt: ["receipt"],
-      nonpo_receipt: ["nonpo_receipt"],
-      backorder: ["backorder"],
-      billing_summary: ["billingsummary"],
-      billing_detail: ["billingdetail"],
-      receiving_sla: ["receiving_sla"]
     }
-
-    # Many of these get requests are handled by +method_missing+.
-    #
-    #  Example:
-    #    service = ActiveFulfillment::DotcomDistributionService.new({username: 'test', password: 'test'})
-    #    # or      ActiveFulfillment::Base.service('dotcom_distribution').new({username: 'test', password: 'test'})
-    #    service.receipt({fromReceiptDate: '2010-10-01', toReceiptDate: '2010-10-02'})
-    #
-    def method_missing(method_sym, *arguments, &block)
-      if SERVICE_ENDPOINTS.keys.include?(method_sym)
-        self.send(:get, method_sym, nil, arguments.first)
-      else
-        super
-      end
-    end
 
     attr_reader :base_url
 
@@ -197,21 +173,8 @@ module ActiveFulfillment
     end
 
     def parse_response(action, xml)
-      if SERVICE_ENDPOINTS[action].size == 2
-        klass = SERVICE_ENDPOINTS[action][1]
-        klass.response_from_xml(xml)
-      else
-        begin
-          klass = ("ActiveFulfillment::DotcomDistribution::" + (action.to_s.classify)).constantize
-          if klass.respond_to?(:response_from_xml)
-            klass.response_from_xml(xml)
-          else
-            raise "response_from_xml not implemented in #{klass}"
-          end
-        rescue NameError => e
-          raise ArgumentError, "Unknown action #{action}"
-        end
-      end
+      klass = SERVICE_ENDPOINTS[action][1]
+      klass.response_from_xml(xml)
     end
 
   end
