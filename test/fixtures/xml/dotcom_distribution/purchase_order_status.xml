@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <purchase-orders>
+    <purchase-order>
+      <po-number>PO1234</po-number>
+      <po-status>O</po-status>
+      <dcd-po-number>DCD-PO-1234</dcd-po-number>
+      <po-date>2011-07-10</po-date>
+      <priority-date>2011-07-11</priority-date>
+      <expected-date>2011-07-12</expected-date>
+      <po-items>
+        <po-item>
+          <sku>the-sku</sku>
+          <item-description>the description</item-description>
+          <expected-qty>12</expected-qty>
+          <received-qty>11</received-qty>
+          <open-qty>1</open-qty>
+          <status>O</status>
+          <po-line-num>1</po-line-num>
+          <style>style text</style>
+          <color>color text</color>
+          <size>size text</size>
+        </po-item>
+      </po-items>
+    </purchase-order>
+  </purchase-orders>
+</response>

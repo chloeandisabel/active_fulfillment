@@ -128,6 +128,21 @@ class RemoteDotcomIntegrationTest < Minitest::Test
     refute_empty response.data
   end
 
+  def test_get_purchase_order_status
+    response = @service.order_status(purchase_order_number: "PO1234")
+    assert response.success?
+    refute_empty response.data
+    assert_equal response.data.length, 1
+    po_status = response.data.first
+    assert_equal po_status.po_number, "PO1234"
+  end
+
+  def test_get_purchase_order_status_with_status
+    response = @service.order_status(status: "A")
+    assert response.success?
+    refute_empty response.data
+  end
+
   def test_get_inventory_snapshot
     requires_manual_test!
 

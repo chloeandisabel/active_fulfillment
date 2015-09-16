@@ -28,6 +28,7 @@ module ActiveFulfillment
     SERVICE_ENDPOINTS = {
       fulfillment: ["order", PostOrder],
       purchase_order: ["purchase_order", PurchaseOrder],
+      purchase_order_status: ["purchase_order", GetPurchaseOrder],
       post_item: ["item", PostItem],
       order_status: ["order", GetOrder],
       shipmethod: ["shipmethod", ShipMethod],
@@ -104,6 +105,15 @@ module ActiveFulfillment
         requires!(options, :fromOrdDate, :toOrdDate)
       end
       get :order_status, order_number, options
+    end
+
+    def purchase_order_status(options = {})
+      options = options.dup
+      purchase_order_number = options.delete(:purchase_order_number)
+      unless purchase_order_number
+        requires!(options, :status)
+      end
+      get :purchase_order_status, purchase_order_number, options
     end
 
     def returns(options = {})
