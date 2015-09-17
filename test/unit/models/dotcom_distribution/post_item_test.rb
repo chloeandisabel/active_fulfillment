@@ -14,14 +14,25 @@ class PostItemTest < Minitest::Test
       package_qty: 5
     }
 
-    @item_doc = Nokogiri.XML(PostItem.new(@item).to_xml)
-
   end
 
 
   def test_post_item_serialization
-    item = @item_doc.xpath("//item")
+    item_doc = Nokogiri.XML(PostItem.new(@item).to_xml)
+    item = item_doc.xpath("//item")
+    check_item(item)
+  end
 
+  def test_post_items_serialization
+    items_doc = Nokogiri.XML(PostItem.to_xml([@item, @item, @item]))
+    xml_items = items_doc.xpath(".//items/item")
+    assert_equal 3, xml_items.length
+    xml_items.each do |item|
+      check_item(item)
+    end
+  end
+
+  def check_item(item)
     assert_equal item.at('.//sku').text, @item[:sku]
     assert_equal item.at('.//description').text, @item[:description]
 
