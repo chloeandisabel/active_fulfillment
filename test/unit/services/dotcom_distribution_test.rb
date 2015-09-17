@@ -210,11 +210,28 @@ class DotcomDistributionTest < Minitest::Test
     assert_nil response
   end
 
-  def test_post_items_with_errors
+  def test_post_item_with_errors
     @service.expects(:ssl_request).with do |verb, url, data, headers|
       verb == :post
     end.returns(invalid_post_item_response)
     response = @service.post_item(@item)
+    refute response.success?
+  end
+
+  def test_post_items_successful
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(successful_post_item_response)
+    response = @service.post_items([@item, @item, @item])
+    # TODO: return a Response object rather than nil
+    assert_nil response
+  end
+
+  def test_post_items_with_errors
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post
+    end.returns(invalid_post_item_response)
+    response = @service.post_items([@item, @item, @item])
     refute response.success?
   end
 

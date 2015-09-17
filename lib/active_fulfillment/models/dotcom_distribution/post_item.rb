@@ -49,8 +49,9 @@ module ActiveFulfillment
       def self.to_xml(items)
         xml_builder = Nokogiri::XML::Builder.new do |xml|
           xml.items({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do
-            items.each do |order|
-              item_to_xml(xml)
+            items.each do |item|
+              item = PostItem.new(item) unless item.instance_of?(self)
+              item.item_to_xml(xml)
             end
           end
         end
@@ -58,6 +59,8 @@ module ActiveFulfillment
         xml_builder.to_xml
       end
 
+      # Returns complete XML document containing a single item. To send a
+      # list of items, use the class method PostItem.to_xml.
       def to_xml
         xml_builder = Nokogiri::XML::Builder.new do |xml|
           xml.items({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do
@@ -66,12 +69,6 @@ module ActiveFulfillment
         end
 
         xml_builder.to_xml
-      end
-
-      private
-
-      def inject_nil(v)
-        v ? {} : {'xsi:nil': 'true'}
       end
 
       def item_to_xml(xml)
@@ -109,7 +106,12 @@ module ActiveFulfillment
           end
         end
       end
-    end
 
+      private
+
+      def inject_nil(v)
+        v ? {} : {'xsi:nil': 'true'}
+      end
+    end
   end
 end

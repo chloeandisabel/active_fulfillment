@@ -30,6 +30,7 @@ module ActiveFulfillment
       purchase_order: ["purchase_order", PurchaseOrder],
       purchase_order_status: ["purchase_order", GetPurchaseOrder],
       post_item: ["item", PostItem],
+      post_items: ["item", PostItem],
       order_status: ["order", GetOrder],
       shipmethod: ["shipmethod", ShipMethod],
       fetch_stock_levels: ["inventory", Inventory],
@@ -128,6 +129,13 @@ module ActiveFulfillment
       commit :post_item, nil, SERVICE_ENDPOINTS[:post_item][1].new(options)
     end
 
+    # Accepts an array of either PostItems or hashes that can be turned into
+    # PostItems.
+    def post_items(items)
+      xml = SERVICE_ENDPOINTS[:post_item][1].to_xml(items)
+      commit :post_item, nil, xml
+    end
+
     def item_summary(options={})
       options = options.dup
       get :item_summary, options.delete(:sku), options
@@ -170,7 +178,9 @@ module ActiveFulfillment
       if query && query.present?
         url += "?#{query}"
       end
-      data = data ? data.to_xml : nil
+      if data.respond_to?(:to_xml)
+        data = data.to_xml
+      end
 
       response = ssl_request(verb, url, data, build_headers(url))
       parse_response(action, response)
