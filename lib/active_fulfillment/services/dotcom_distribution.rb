@@ -103,7 +103,7 @@ module ActiveFulfillment
     # into PurchaseOrders.
     def purchase_orders(purchase_orders)
       xml = SERVICE_ENDPOINTS[:purchase_order][1].to_xml(purchase_orders)
-      commit :post_item, nil, xml
+      commit :purchase_order, nil, xml
     end
 
     def order_status(options = {})
