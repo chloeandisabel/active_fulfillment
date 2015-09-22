@@ -18,7 +18,7 @@ module ActiveFulfillment
     #   invoice we will suppress printing the price and values.
     class PostOrder
       include Model
-      include NilInjector
+      include ::ActiveFulfillment::DotcomDistribution::NilInjector
 
       attr_accessor :order_number,
                     :order_date,
