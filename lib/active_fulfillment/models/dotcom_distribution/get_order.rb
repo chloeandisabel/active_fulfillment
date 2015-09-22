@@ -11,24 +11,18 @@ module ActiveFulfillment
 
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//order").each do |el|
-          hash[:client_order_number] = el.at('.//client_order_number').try(:text)
-          hash[:dcd_order_number] = el.at('.//dcd_order_number').try(:text)
-          hash[:dcd_order_suffix] = el.at('.//dcd_order_suffix').try(:text)
-          hash[:order_status] = el.at('.//order_status').try(:text)
-          hash[:ship_date] = el.at('.//ship_date').try(:text)
-
-          records << GetOrder.new(hash)
+          records << GetOrder.new({client_order_number: el.at('.//client_order_number').try(:text),
+                                   dcd_order_number: el.at('.//dcd_order_number').try(:text),
+                                   dcd_order_suffix: el.at('.//dcd_order_suffix').try(:text),
+                                   order_status: el.at('.//order_status').try(:text),
+                                   ship_date: el.at('.//ship_date').try(:text)})
         end
-
         Response.new(true, '', {data: records})
       end
-
     end
-
   end
 end

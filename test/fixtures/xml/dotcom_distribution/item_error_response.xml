@@ -1,0 +1,16 @@
+<response xmlns="http://dcd/datacontracts/post_item" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+  <item_errors xmlns:a="http://schemas.datacontract.org/2004/07/DCDAPIService">
+    <a:item_error>
+      <a:error_description>The First Error</a:error_description>
+      <a:sku>C028</a:sku>
+    </a:item_error>
+    <a:item_error>
+      <a:error_description>The Second Error</a:error_description>
+      <a:sku>C028A</a:sku>
+    </a:item_error>
+    <a:item_error>
+      <a:error_description>Something completely different</a:error_description>
+      <a:sku>C028K</a:sku>
+    </a:item_error>
+  </item_errors>
+</response>
