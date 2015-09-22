@@ -11,18 +11,17 @@ module ActiveFulfillment
                     :return_items
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//Return").each do |el|
           next if el.attributes["nil"]
 
-          hash[:dcd_return_number] = el.at('.//dcd_return_number').try(:text)
-          hash[:department] = el.at('.//department').try(:text)
-          hash[:original_order_number] = el.at('.//original_order_number').try(:text)
-          hash[:return_date] = el.at('.//return_date')
-          hash[:rn] = el.at('.//rn')
+          hash = {dcd_return_number: el.at('.//dcd_return_number').try(:text),
+                  department: el.at('.//department').try(:text),
+                  original_order_number: el.at('.//original_order_number').try(:text),
+                  return_date: el.at('.//return_date'),
+                  rn: el.at('.//rn')}
 
           hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
             ReturnItem.new(sku: item.at('.//sku').try(:text),

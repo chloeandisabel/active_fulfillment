@@ -31,15 +31,12 @@ module ActiveFulfillment
                     :size
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//item_error").each do |error|
-          hash[:error_description] = error.at('.//error_description').try(:text)
-          hash[:sku] = error.at('.//sku').try(:text)
-
-          records << hash
+          records << {sku: error.at('.//sku').try(:text),
+                      error_description: error.at('.//error_description').try(:text)}
         end
         if records.length > 0
           return Response.new(false, '', {data: records})

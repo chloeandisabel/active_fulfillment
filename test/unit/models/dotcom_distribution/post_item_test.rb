@@ -32,6 +32,18 @@ class PostItemTest < Minitest::Test
     end
   end
 
+  def test_error_response_parsing
+    error_xml = xml_fixture('dotcom_distribution/item_error_response')
+    response = PostItem.response_from_xml(error_xml)
+    assert_equal false, response.success?
+    records = response.params["data"]
+    assert_equal 3, records.length
+    assert_equal 'C028', records[0][:sku]
+    assert_equal 'The First Error', records[0][:error_description]
+    assert_equal 'C028K', records[-1][:sku]
+    assert_equal 'Something completely different', records[-1][:error_description]
+  end
+
   def check_item(item)
     assert_equal item.at('.//sku').text, @item[:sku]
     assert_equal item.at('.//description').text, @item[:description]
@@ -59,5 +71,4 @@ class PostItemTest < Minitest::Test
     assert_equal item.at('.//size').text, ''
     assert_equal item.at('.//long-description').text, ''
   end
-
 end

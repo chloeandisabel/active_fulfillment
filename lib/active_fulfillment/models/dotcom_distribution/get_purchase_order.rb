@@ -16,7 +16,6 @@ module ActiveFulfillment
         success = true, message = '', hash = {}, records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//purchase-order").each do |el|
           hash[:po_number] = el.at('.//po-number').try(:text)
           hash[:po_status] = el.at('.//po-status').try(:text)
@@ -24,7 +23,6 @@ module ActiveFulfillment
           hash[:po_date] = el.at('.//po-date').try(:text)
           hash[:priority_date] = el.at('.//priority-date').try(:text)
           hash[:expected_date] = el.at('.//expected-date').try(:text)
-
           hash[:po_items] = el.xpath('.//po-items//po-item').collect do |item|
             PurchaseOrderItem.new(sku: item.at('.//sku').try(:text),
                                   item_description: item.at('.//item-description').try(:text),
