@@ -18,6 +18,19 @@ module ActiveFulfillment
         @items ||= []
       end
 
+      def self.to_xml(purchase_orders)
+        xml_builder = Nokogiri::XML::Builder.new do |xml|
+          xml.purchase_orders({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do
+            purchase_orders.each do |po|
+              po = PurchaseOrder.new(po) unless po.instance_of?(self)
+              po.po_to_xml(xml)
+            end
+          end
+        end
+
+        xml_builder.to_xml
+      end
+
       def to_xml
         xml_builder = Nokogiri::XML::Builder.new do |xml|
           xml.purchase_orders({'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"}) do

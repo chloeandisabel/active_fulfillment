@@ -99,6 +99,13 @@ module ActiveFulfillment
       commit :purchase_order, nil, SERVICE_ENDPOINTS[:purchase_order][1].new(options)
     end
 
+    # Accepts an array of either PurchaseOrders or hashes that can be turned
+    # into PurchaseOrders.
+    def purchase_orders(purchase_orders)
+      xml = SERVICE_ENDPOINTS[:purchase_order][1].to_xml(purchase_orders)
+      commit :post_item, nil, xml
+    end
+
     def order_status(options = {})
       options = options.dup
       order_number = options.delete(:order_number)
