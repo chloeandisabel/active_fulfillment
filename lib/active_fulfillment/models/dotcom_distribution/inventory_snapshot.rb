@@ -16,28 +16,23 @@ module ActiveFulfillment
                     :transaction_date
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//inv_snapshot_item").each do |el|
-          hash[:sku] = el.at('.//sku').try(:text)
-          hash[:description] = el.at('.//description').try(:text)
-          hash[:quantity_bod] = el.at('.//begin_bal').try(:text)
-          hash[:quantity_eod] = el.at('.//end_bal').try(:text)
-          hash[:quantity_adjusted] = el.at('.//adj_qty').try(:text)
-          hash[:quantity_received] = el.at('.//rcpt_qty').try(:text)
-          hash[:quantity_returned] = el.at('.//ret_qty').try(:text)
-          hash[:quantity_shipped] = el.at('.//shp_qty').try(:text)
-          hash[:quantity_unavailable_adjustments] = el.at('.//uad_qty').try(:text)
-          hash[:transaction_date] = el.at('.//trans_date').try(:text)
-
-          records << InventorySnapshot.new(hash)
+          records << InventorySnapshot.new({sku: el.at('.//sku').try(:text),
+                                            description: el.at('.//description').try(:text),
+                                            quantity_bod: el.at('.//begin_bal').try(:text),
+                                            quantity_eod: el.at('.//end_bal').try(:text),
+                                            quantity_adjusted: el.at('.//adj_qty').try(:text),
+                                            quantity_received: el.at('.//rcpt_qty').try(:text),
+                                            quantity_returned: el.at('.//ret_qty').try(:text),
+                                            quantity_shipped: el.at('.//shp_qty').try(:text),
+                                            quantity_unavailable_adjustments: el.at('.//uad_qty').try(:text),
+                                            transaction_date: el.at('.//trans_date').try(:text)})
         end
-
         Response.new(true, '', {data: records})
       end
     end
-
   end
 end

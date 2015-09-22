@@ -10,19 +10,17 @@ module ActiveFulfillment
                     :vendor_items
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//item_info").each do |el|
-          hash[:sku] = el.at('.//sku').try(:text)
-          hash[:description] = el.at('.//item_description').try(:text)
-          hash[:last_receipt_date] = el.at('.//last_receipt_date').try(:text)
-          hash[:upc_number] = el.at('.//upc_num').try(:text)
-          hash[:vendor_items] = el.xpath('.//vendor_items//vendor_item').collect do |item|
-            VendorItem.new(cross_ref: item.at('.//vendor_cross_ref').try(:text))
-          end
-          records << ItemSummary.new(hash)
+          records << ItemSummary.new({sku: el.at('.//sku').try(:text),
+                                      description: el.at('.//item_description').try(:text),
+                                      last_receipt_date: el.at('.//last_receipt_date').try(:text),
+                                      upc_number: el.at('.//upc_num').try(:text),
+                                      vendor_items: el.xpath('.//vendor_items//vendor_item').collect { |item|
+                                        VendorItem.new(cross_ref: item.at('.//vendor_cross_ref').try(:text))
+                                      }})
         end
         Response.new(success, '', {data: records})
       end
