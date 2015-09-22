@@ -3,7 +3,7 @@ module ActiveFulfillment
 
     class PurchaseOrder
       include Model
-      include NilInjector
+      include ::ActiveFulfillment::DotcomDistribution::NilInjector
 
       attr_accessor :po_number,
                     :priority_date,
