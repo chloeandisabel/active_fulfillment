@@ -25,30 +25,28 @@ module ActiveFulfillment
                     :ship_items
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//shipment").each do |el|
-          hash[:client_order_number] = el.at('.//client_order_number').try(:text)
-          hash[:customer_number] = el.at('.//customer_number').try(:text)
-          hash[:dcd_order_number] = el.at('.//dcd_order_number').try(:text)
-          hash[:order_date] = el.at('.//order_date').try(:text)
-          hash[:order_shipping_handling] = el.at('.//order_shipping_handling').try(:text)
-          hash[:order_status] = el.at('.//order_status').try(:text)
-          hash[:order_subtotal] = el.at('.//order_subtotal').try(:text)
-          hash[:order_tax] = el.at('.//order_tax').try(:text)
-          hash[:order_total] = el.at('.//order_total').try(:text)
-          hash[:ship_date] = el.at('.//ship_date').try(:text)
-          hash[:ship_weight] = el.at('.//ship_weight').try(:text)
-          hash[:shipto_addr1] = el.at('.//shipto_addr1').try(:text)
-          hash[:shipto_addr2] = el.at('.//shipto_addr2').try(:text)
-          hash[:shipto_city] = el.at('.//shipto_city').try(:text)
-          hash[:shipto_email_address] = el.at('.//shipto_email_address').try(:text)
-          hash[:shipto_name] = el.at('.//shipto_name').try(:text)
-          hash[:shipto_state] = el.at('.//shipto_state').try(:text)
-          hash[:shipto_zip] = el.at('.//shipto_zip').try(:text)
-
+          hash = {client_order_number: el.at('.//client_order_number').try(:text),
+                  customer_number: el.at('.//customer_number').try(:text),
+                  dcd_order_number: el.at('.//dcd_order_number').try(:text),
+                  order_date: el.at('.//order_date').try(:text),
+                  order_shipping_handling: el.at('.//order_shipping_handling').try(:text),
+                  order_status: el.at('.//order_status').try(:text),
+                  order_subtotal: el.at('.//order_subtotal').try(:text),
+                  order_tax: el.at('.//order_tax').try(:text),
+                  order_total: el.at('.//order_total').try(:text),
+                  ship_date: el.at('.//ship_date').try(:text),
+                  ship_weight: el.at('.//ship_weight').try(:text),
+                  shipto_addr1: el.at('.//shipto_addr1').try(:text),
+                  shipto_addr2: el.at('.//shipto_addr2').try(:text),
+                  shipto_city: el.at('.//shipto_city').try(:text),
+                  shipto_email_address: el.at('.//shipto_email_address').try(:text),
+                  shipto_name: el.at('.//shipto_name').try(:text),
+                  shipto_state: el.at('.//shipto_state').try(:text),
+                  shipto_zip: el.at('.//shipto_zip').try(:text)}
           hash[:ship_items] = [] if hash[:ship_items].nil? && el.xpath('.//ship_items').size > 0
 
           el.xpath('.//ship_item').each do |item|
@@ -69,7 +67,6 @@ module ActiveFulfillment
           end
           records << Shipment.new(hash)
         end
-
         Response.new(true, '', {data: records})
       end
     end

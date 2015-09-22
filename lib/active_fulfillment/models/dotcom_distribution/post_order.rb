@@ -153,12 +153,10 @@ module ActiveFulfillment
         success = true, message = '', hash = {}, records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-
         doc.xpath("//order_error").each do |error|
-          hash[:error_description] = error.at('.//error_description').try(:text)
-          hash[:order_number] = error.at('.//order_number').try(:text)
-
-          records << hash
+          records << {order_number: error.at('.//order_number').try(:text),
+                      error_description: error.at('.//error_description').try(:text)}
+                      
         end
         if records.length > 0
           return Response.new(false, '', {data: records})
