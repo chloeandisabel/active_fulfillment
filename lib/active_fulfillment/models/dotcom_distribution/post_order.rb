@@ -18,6 +18,7 @@ module ActiveFulfillment
     #   invoice we will suppress printing the price and values.
     class PostOrder
       include Model
+      include NilInjector
 
       attr_accessor :order_number,
                     :order_date,
@@ -143,10 +144,6 @@ module ActiveFulfillment
 
       def custom_fields
         @custom_fields || []
-      end
-
-      def inject_nil(v)
-        v ? {} : {'xsi:nil': 'true'}
       end
 
       def self.response_from_xml(xml)

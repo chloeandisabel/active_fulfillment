@@ -17,6 +17,17 @@ class PurchaseOrderTest < Minitest::Test
       }]}
   end
 
+  def test_class_to_xml_with_hash
+    xml = PurchaseOrder.to_xml([@purchase_order, @purchase_order])
+    doc = Nokogiri.XML(xml)
+
+    pos = doc.xpath("//purchase_orders//purchase_order")
+    assert_equal 2, pos.length
+
+    item_xml = pos.first.at('.//items//item')
+    assert_equal @purchase_order[:items][0][:sku], item_xml.at('.//sku').try(:text)
+  end
+
   def test_purchase_order_serialization
     doc = Nokogiri.XML(PurchaseOrder.new(@purchase_order).to_xml)
     item = doc.xpath("//item").first

@@ -3,6 +3,8 @@ module ActiveFulfillment
 
     class PurchaseOrder
       include Model
+      include NilInjector
+
       attr_accessor :po_number,
                     :priority_date,
                     :expected_on_dock,
@@ -44,8 +46,8 @@ module ActiveFulfillment
       def po_to_xml(xml)
         xml.send(:"purchase_order") do
           xml.send(:"po-number", self.po_number)
-          xml.send(:"priority-date", self.priority_date)
-          xml.send(:"expected-on-dock", self.expected_on_dock)
+          xml.send(:"priority-date", self.priority_date, inject_nil(self.priority_date))
+          xml.send(:"expected-on-dock", self.expected_on_dock, inject_nil(self.expected_on_dock))
           xml.send(:"items") do
             Array(items).each do |item|
               item.send(:item_to_xml, xml)
