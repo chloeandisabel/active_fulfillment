@@ -3,7 +3,7 @@ module ActiveFulfillment
 
     class PostItem
       include Model
-      include NilInjector
+      include ::ActiveFulfillment::DotcomDistribution::NilInjector
 
       attr_accessor :sku,
                     :description,
