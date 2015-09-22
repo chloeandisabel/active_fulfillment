@@ -147,7 +147,7 @@ module ActiveFulfillment
       end
 
       def self.response_from_xml(xml)
-        success = true, message = '', hash = {}, records = []
+        success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
         doc.xpath("//order_error").each do |error|
