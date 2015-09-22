@@ -3,6 +3,7 @@ module ActiveFulfillment
 
     class PostItem
       include Model
+      include NilInjector
 
       attr_accessor :sku,
                     :description,
@@ -102,12 +103,6 @@ module ActiveFulfillment
             xml.cdata self.long_description if self.long_description
           end
         end
-      end
-
-      private
-
-      def inject_nil(v)
-        v ? {} : {'xsi:nil': 'true'}
       end
     end
   end
