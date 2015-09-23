@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
+require_relative 'nil_injector'
+
 module ActiveFulfillment
   module DotcomDistribution
 
     # = Dotcom ActiveFulfillment Order
     #
-    # This is the shipment request sent to us based on your customer’s order
+    # This is the shipment request sent to us based on your customer's order
     #
     # Credit Card number: Is not required and we would prefer not getting it at
     #   all unless you need us to print it on an invoice or packing document.  It
