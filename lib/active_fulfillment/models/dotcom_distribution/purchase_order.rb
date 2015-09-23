@@ -1,3 +1,5 @@
+require_relative 'nil_injector'
+
 module ActiveFulfillment
   module DotcomDistribution
 
