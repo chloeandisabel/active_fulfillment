@@ -1,27 +1,38 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<response>
-  <purchase-orders>
-    <purchase-order>
-      <po-number>PO1234</po-number>
-      <po-status>O</po-status>
-      <dcd-po-number>DCD-PO-1234</dcd-po-number>
-      <po-date>2011-07-10</po-date>
-      <priority-date>2011-07-11</priority-date>
-      <expected-date>2011-07-12</expected-date>
-      <po-items>
-        <po-item>
-          <sku>the-sku</sku>
-          <item-description>the description</item-description>
-          <expected-qty>12</expected-qty>
-          <received-qty>11</received-qty>
-          <open-qty>1</open-qty>
-          <status>O</status>
-          <po-line-num>1</po-line-num>
-          <style>style text</style>
-          <color>color text</color>
-          <size>size text</size>
-        </po-item>
-      </po-items>
-    </purchase-order>
-  </purchase-orders>
+<response xmlns="http://dcd/datacontracts/purchase_order" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+  <purchase_orders xmlns:a="http://schemas.datacontract.org/2004/07/DCDAPIService">
+    <a:purchase_order>
+      <a:dcd_po_number>260664570</a:dcd_po_number>
+      <a:expected_date>12/29/2015 12:00:00 AM</a:expected_date>
+      <a:po_date>12/29/2015</a:po_date>
+      <a:po_items>
+        <a:po_item>
+          <a:color>color text</a:color>
+          <a:expected_qty>500</a:expected_qty>
+          <a:item_description>Minaret Light Rose Teardrop Ea</a:item_description>
+          <a:open_qty>0</a:open_qty>
+          <a:po_line_num>1</a:po_line_num>
+          <a:received_qty>500</a:received_qty>
+          <a:size />
+          <a:sku>E224SQ</a:sku>
+          <a:status>A</a:status>
+          <a:style />
+        </a:po_item>
+        <a:po_item>
+          <a:color />
+          <a:expected_qty>450</a:expected_qty>
+          <a:item_description>Round Peridot Stud Earrings</a:item_description>
+          <a:open_qty>0</a:open_qty>
+          <a:po_line_num>2</a:po_line_num>
+          <a:received_qty>450</a:received_qty>
+          <a:size />
+          <a:sku>E118PE</a:sku>
+          <a:status>A</a:status>
+          <a:style />
+        </a:po_item>
+      </a:po_items>
+      <a:po_number>D002</a:po_number>
+      <a:po_status>A</a:po_status>
+      <a:priority_date>12/29/2015</a:priority_date>
+    </a:purchase_order>
+  </purchase_orders>
 </response>

@@ -16,21 +16,21 @@ module ActiveFulfillment
         success = true, message = '', records = []
         doc = Nokogiri.XML(xml)
         doc.remove_namespaces!
-        doc.xpath("//purchase-order").each do |el|
-          records << GetPurchaseOrder.new(po_number: el.at('.//po-number').try(:text),
-                                          po_status: el.at('.//po-status').try(:text),
-                                          dcd_po_number: el.at('.//dcd-po-number').try(:text),
-                                          po_date: el.at('.//po-date').try(:text),
-                                          priority_date: el.at('.//priority-date').try(:text),
-                                          expected_date: el.at('.//expected-date').try(:text),
-                                          po_items: el.xpath('.//po-items//po-item').collect { |item|
+        doc.xpath("//purchase_order").each do |el|
+          records << GetPurchaseOrder.new(po_number: el.at('.//po_number').try(:text),
+                                          po_status: el.at('.//po_status').try(:text),
+                                          dcd_po_number: el.at('.//dcd_po_number').try(:text),
+                                          po_date: el.at('.//po_date').try(:text),
+                                          priority_date: el.at('.//priority_date').try(:text),
+                                          expected_date: el.at('.//expected_date').try(:text),
+                                          po_items: el.xpath('.//po_items//po_item').collect { |item|
                                             PurchaseOrderItem.new(sku: item.at('.//sku').try(:text),
-                                                                  item_description: item.at('.//item-description').try(:text),
-                                                                  expected_qty: item.at('.//expected-qty').try(:text).to_i,
-                                                                  received_qty: item.at('.//received-qty').try(:text).to_i,
-                                                                  open_qty: item.at('.//open-qty').try(:text).to_i,
+                                                                  item_description: item.at('.//item_description').try(:text),
+                                                                  expected_qty: item.at('.//expected_qty').try(:text).to_i,
+                                                                  received_qty: item.at('.//received_qty').try(:text).to_i,
+                                                                  open_qty: item.at('.//open_qty').try(:text).to_i,
                                                                   status: item.at('.//status').try(:text),
-                                                                  po_line_num: item.at('.//po-line-num').try(:text).to_i,
+                                                                  po_line_num: item.at('.//po_line_num').try(:text).to_i,
                                                                   style: item.at('.//style').try(:text),
                                                                   color: item.at('.//color').try(:text),
                                                                   size: item.at('.//size').try(:text))
