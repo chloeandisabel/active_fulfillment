@@ -68,7 +68,7 @@ module ActiveFulfillment
       # Given a possibly non-nil string, remove non-ASCII characters and
       # enforce max length based on +field_name+.
       def normalize(s, field_name=nil)
-        return nil if s == nil
+        return nil if s.nil?
 
         # Remove non-ASCII before truncating
         s = s.to_s.dup.encode(Encoding.find("ASCII"),
