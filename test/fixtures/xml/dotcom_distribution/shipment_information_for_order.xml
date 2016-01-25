@@ -5,6 +5,7 @@
       <a:client_order_number>4E717D91B990</a:client_order_number>
       <a:customer_number>lass95842</a:customer_number>
       <a:dcd_order_number>9004859200</a:dcd_order_number>
+      <a:dcd_order_release_number>01</a:dcd_order_release_number>
       <a:order_date>10/12/2011 12:00:00 AM</a:order_date>
       <a:order_shipping_handling>0.00</a:order_shipping_handling>
       <a:order_status>Shipped</a:order_status>
