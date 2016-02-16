@@ -32,13 +32,14 @@ module ActiveFulfillment
       post_item: ["item", PostItem],
       post_items: ["item", PostItem],
       order_status: ["order", GetOrder],
+      cancel_order: ["order", GetOrder],
       shipmethod: ["shipmethod", ShipMethod],
       fetch_stock_levels: ["inventory", Inventory],
       returns: ["return", Return],
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
       item_summary: ["item", ItemSummary],
-      inventory_snapshot: ["inventory_snapshot", InventorySnapshot],
+      inventory_snapshot: ["inventory_snapshot", InventorySnapshot]
     }
 
     attr_reader :base_url
@@ -115,6 +116,17 @@ module ActiveFulfillment
       get :order_status, order_number, options
     end
 
+    def cancel_order(options = {})
+      options = options.dup
+      order_number = options.delete(:order_number)
+      delete :cancel, nil, data: <<EOS
+<?xml version="1.0" encoding="UTF-8"?> <orders>
+<order> <order-number>#{order_number}</order-number>
+  </order>
+</orders>
+EOS
+    end
+
     def purchase_order_status(options = {})
       options = options.dup
       purchase_order_number = options.delete(:purchase_order_number)
@@ -174,6 +186,15 @@ module ActiveFulfillment
       end
 
       make_request(:get, action, resource, query: query)
+    end
+
+    def delete(action, resource=nil, data=nil)
+      query = ""
+      if query_hash && query_hash.present?
+        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }.join("&")
+      end
+
+      make_request(:delete, action, resource, query: query)
     end
 
     def commit(action, resource=nil, data = nil)
