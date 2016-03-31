@@ -17,11 +17,13 @@ module ActiveFulfillment
         doc.xpath("//Return").each do |el|
           next if el.attributes["nil"]
 
-          hash = {dcd_return_number: el.at('.//dcd_return_number').try(:text),
-                  department: el.at('.//department').try(:text),
-                  original_order_number: el.at('.//original_order_number').try(:text),
-                  return_date: el.at('.//return_date'),
-                  rn: el.at('.//rn')}
+          hash = {
+            dcd_return_number: el.at('.//dcd_return_number').try(:text),
+            department: el.at('.//department').try(:text),
+            original_order_number: el.at('.//original_order_number').try(:text),
+            return_date: el.at('.//return_date').try(:text),
+            rn: el.at('.//rn').try(:text)
+          }
 
           hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
             ReturnItem.new(sku: item.at('.//sku').try(:text),
@@ -34,7 +36,7 @@ module ActiveFulfillment
 
           records << Return.new(hash)
         end
-        Response.new(true, '', {data: records})
+        Response.new(success, message, {data: records})
       end
     end
 
