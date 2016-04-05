@@ -1,0 +1,12 @@
+<response xmlns="http://dcd/datacontracts/receipt" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+  <receipts xmlns:a="http://schemas.datacontract.org/2004/07/DCDAPIService">
+    <a:receipt>
+      <a:dcd_identifier>RTU</a:dcd_identifier>
+      <a:item_receipt_date>02/23/16 10:38</a:item_receipt_date>
+      <a:po_reference_number>RMA463618740</a:po_reference_number>
+      <a:quantity_received>1</a:quantity_received>
+      <a:receipt_date>02/23/16 10:35</a:receipt_date>
+      <a:sku>E154G</a:sku>
+    </a:receipt>
+  </receipts>
+</response>
