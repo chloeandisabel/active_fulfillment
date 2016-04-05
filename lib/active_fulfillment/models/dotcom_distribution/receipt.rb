@@ -21,7 +21,7 @@ module ActiveFulfillment
             dcd_identifier: el.at('.//dcd_identifier').try(:text),
             po_reference_number: el.at('.//po_reference_number').try(:text),
             sku: el.at('.//sku').try(:text),
-            quantity_received: el.at('.//quantity_received').try(:text).try(:to_i) || 0,
+            quantity_received: el.at('.//quantity_received').try(:text).try(:to_i),
             item_receipt_date: el.at('.//item_receipt_date').try(:text),
             receipt_date: el.at('.//receipt_date').try(:text)
           }
