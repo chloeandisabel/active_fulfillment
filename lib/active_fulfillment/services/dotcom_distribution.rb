@@ -36,6 +36,7 @@ module ActiveFulfillment
       shipmethod: ["shipmethod", ShipMethod],
       fetch_stock_levels: ["inventory", Inventory],
       returns: ["return", Return],
+      receipts: ["receipt", Receipt],
       fetch_tracking_data: ["shipment", Shipment],
       adjustment: ["adjustment", Adjustment],
       item_summary: ["item", ItemSummary],
@@ -139,6 +140,11 @@ EOS
     def returns(options = {})
       requires!(options, :fromReturnDate, :toReturnDate)
       get :returns, nil, options
+    end
+
+    def receipts(options = {})
+      requires!(options, :fromReceiptDate, :toReceiptDate)
+      get :receipts, nil, options
     end
 
     # +post_item+ and +purchase_order+ are used to let Dotcom know
