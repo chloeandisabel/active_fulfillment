@@ -9,7 +9,6 @@ module ActiveFulfillment
     RESCUABLE_CONNECTION_ERRORS = [
       Net::ReadTimeout,
       Net::OpenTimeout,
-      TimeoutError,
       Errno::ETIMEDOUT,
       Timeout::Error,
       IOError,
