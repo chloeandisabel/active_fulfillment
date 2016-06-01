@@ -27,12 +27,12 @@ module ActiveFulfillment
 
           hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
             ReturnItem.new(sku: item.at('.//sku').try(:text),
-                           quantity_returned: item.at('.//quantity_returned').try(:text),
+                           quantity_returned: item.at('.//quantity_returned').try(:text).to_i,
                            line_number: item.at('.//line_number').try(:text),
                            item_disposition: item.at('.//item_disposition').try(:text),
-                           returns_reason_code: item.at('.//returns_reason_code').try(:text))
+                           returns_reason_code: item.at('.//returns_reason_code').try(:text),
+                           returns_action_code: item.at('.//returns_action_code').try(:text))
           end
-          hash[:return_items] = nil if hash[:return_items].length == 0
 
           records << Return.new(hash)
         end
@@ -46,7 +46,8 @@ module ActiveFulfillment
                     :quantity_returned,
                     :line_number,
                     :item_disposition,
-                    :returns_reason_code
+                    :returns_reason_code,
+                    :returns_action_code
     end
   end
 end
