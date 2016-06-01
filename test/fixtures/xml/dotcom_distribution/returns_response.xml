@@ -1,21 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<response>
-  <returns>
-    <return>
-      <items>
-        <item>
-          <sku>text</sku>
-          <quantity-returned>0</quantity-returned>
-          <line-number>0</line-number>
-          <item-disposition>text</item-disposition>
-          <returns-reason-code>0</returns-reason-code>
-        </item>
-      </items>
-      <department>text</department>
-      <original-order-number>text</original-order-number>
-      <dcd-return-number>0</dcd-return-number>
-      <return-date>1967-08-13</return-date>
-      <original-ship-date>1967-08-13</original-ship-date>
-    </return>
+<response xmlns="http://dcd/datacontracts/return" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+  <returns xmlns:a="http://schemas.datacontract.org/2004/07/DCDAPIService">
+    <a:Return>
+      <a:dcd_return_number>262155673501</a:dcd_return_number>
+      <a:department>01</a:department>
+      <a:original_order_number>H03847877315</a:original_order_number>
+      <a:ret_items>
+        <a:ret_item>
+          <a:item_disposition>011</a:item_disposition>
+          <a:line_number/>
+          <a:quantity_returned>2</a:quantity_returned>
+          <a:returns_action_code>C</a:returns_action_code>
+          <a:returns_reason_code>RTGD</a:returns_reason_code>
+          <a:sku>MKT-CAT20</a:sku>
+        </a:ret_item>
+        <a:ret_item>
+          <a:item_disposition>011</a:item_disposition>
+          <a:line_number/>
+          <a:quantity_returned>2</a:quantity_returned>
+          <a:returns_action_code>C</a:returns_action_code>
+          <a:returns_reason_code>RTGD</a:returns_reason_code>
+          <a:sku>NDSPY3</a:sku>
+        </a:ret_item>
+        <a:ret_item>
+          <a:item_disposition>012</a:item_disposition>
+          <a:line_number/>
+          <a:quantity_returned>1</a:quantity_returned>
+          <a:returns_action_code>C</a:returns_action_code>
+          <a:returns_reason_code>RTGD</a:returns_reason_code>
+          <a:sku>JTRAY1</a:sku>
+        </a:ret_item>
+      </a:ret_items>
+      <a:return_date>05/11/16</a:return_date>
+      <a:rn>RN</a:rn>
+    </a:Return>
   </returns>
 </response>
