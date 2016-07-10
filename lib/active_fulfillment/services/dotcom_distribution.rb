@@ -142,8 +142,9 @@ EOS
       get :returns, nil, options
     end
 
+    # Either requires +:fromReceiptDate+ and +:toReceiptDate+, or
+    # +:po_mask+. All three are allowed together as well.
     def receipts(options = {})
-      requires!(options, :fromReceiptDate, :toReceiptDate)
       get :receipts, nil, options
     end
 
