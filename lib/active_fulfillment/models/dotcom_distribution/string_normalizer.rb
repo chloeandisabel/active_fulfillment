@@ -37,7 +37,7 @@ module ActiveFulfillment
         country: 2,
         phone: 19,
         email: 50,
-        ship_method: 2,
+        ship_method: 3,
         special_instructions: 40,
         special_messaging: 250,
         drop_ship: 1,
