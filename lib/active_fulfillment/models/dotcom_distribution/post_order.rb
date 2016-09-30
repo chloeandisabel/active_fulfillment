@@ -350,6 +350,8 @@ module ActiveFulfillment
                    inject_nil(line_item.gift_box_wrap_quantity))
           xml.send(:"gift-box-wrap-type", normalize(line_item.gift_box_wrap_type, :gift_box_wrap_type),
                    inject_nil(line_item.gift_box_wrap_type))
+          xml.send(:"HS_code", normalize(line_item.variant.hs_code, :hs_code),
+                   inject_nil(line_item.hs_code))
         end
       end
     end
@@ -365,7 +367,8 @@ module ActiveFulfillment
                     :client_item,
                     :line_number,
                     :gift_box_wrap_quantity,
-                    :gift_box_wrap_type
+                    :gift_box_wrap_type,
+                    :hs_code
 
       def price
         @price || 0
