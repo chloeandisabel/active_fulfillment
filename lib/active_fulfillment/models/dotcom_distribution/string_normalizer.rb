@@ -62,7 +62,8 @@ module ActiveFulfillment
         company: 30,
         third_party_account: 25,
         priority: 5,
-        gift_box_wrap_type: 4
+        gift_box_wrap_type: 4,
+        hs_code: 10
       }
 
       # Given a possibly non-nil string, remove non-ASCII characters and
