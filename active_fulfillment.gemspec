@@ -24,7 +24,6 @@ Gem::Specification.new do |s|
   s.add_dependency('active_utils', '~> 3.3.1')
   s.add_dependency('nokogiri', '>= 1.6.8')
   s.add_dependency('activemodel', '>= 3.2.9')
-  s.add_dependency('rubysl-resolv')
   s.add_dependency('thor')
 
   s.add_development_dependency('rake')
