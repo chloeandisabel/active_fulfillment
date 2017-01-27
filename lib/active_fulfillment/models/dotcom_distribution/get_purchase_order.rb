@@ -3,7 +3,6 @@ module ActiveFulfillment
 
     class GetPurchaseOrder
       include Model
-
       attr_accessor :po_number,
                     :po_status,
                     :dcd_po_number,

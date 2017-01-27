@@ -3,7 +3,6 @@ module ActiveFulfillment
 
     class Shipment
       include Model
-
       attr_accessor :client_order_number,
                     :customer_number,
                     :dcd_order_number,
@@ -79,7 +78,6 @@ module ActiveFulfillment
 
     class ShipItem
       include Model
-
       attr_accessor :carrier,
                     :carton_id,
                     :item_description,
