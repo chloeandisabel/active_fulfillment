@@ -3,7 +3,6 @@ module ActiveFulfillment
 
     class Inventory
       include Model
-
       attr_accessor :sku,
                     :description,
                     :product_group,

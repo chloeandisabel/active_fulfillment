@@ -3,7 +3,6 @@ module ActiveFulfillment
 
     class InventorySnapshot
       include Model
-
       attr_accessor :sku,
                     :description,
                     :quantity_bod,

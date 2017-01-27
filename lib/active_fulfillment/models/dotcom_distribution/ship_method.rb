@@ -3,7 +3,6 @@ module ActiveFulfillment
 
     class ShipMethod
       include Model
-
       attr_accessor :carrier,
                     :service,
                     :shipping_code,
