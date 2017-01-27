@@ -23,7 +23,9 @@ module ActiveFulfillment
                     :shipto_name,
                     :shipto_state,
                     :shipto_zip,
-                    :ship_items
+                    :ship_items,
+                    :transaction_type, # webhook shipment attribute
+                    :transaction_time  # ditty
 
       def self.response_from_xml(xml)
         success = true, message = '', records = []
@@ -48,7 +50,9 @@ module ActiveFulfillment
                   shipto_email_address: el.at('.//shipto_email_address').try(:text),
                   shipto_name: el.at('.//shipto_name').try(:text),
                   shipto_state: el.at('.//shipto_state').try(:text),
-                  shipto_zip: el.at('.//shipto_zip').try(:text)}
+                  shipto_zip: el.at('.//shipto_zip').try(:text),
+                  transaction_type: el.attributes['transaction_type'].try(:text),
+                  transaction_time: el.attributes['transaction_time'].try(:text)}
           hash[:ship_items] = [] if hash[:ship_items].nil? && el.xpath('.//ship_items').size > 0
 
           el.xpath('.//ship_item').each do |item|
