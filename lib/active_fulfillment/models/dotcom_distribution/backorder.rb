@@ -2,6 +2,7 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class Backorder
+      include Model
       attr_accessor :carrier,
                     :dcd_order_number,
                     :dcd_order_release_number,
@@ -12,7 +13,6 @@ module ActiveFulfillment
                     :ship_to_email,
                     :ship_to_name,
                     :backorder_items
-
 
       def self.response_from_xml(xml)
         success = true, message = '', records = []
@@ -44,6 +44,7 @@ module ActiveFulfillment
     end
 
     class BackorderItem
+      include Model
       attr_accessor :vendor,
                     :sku,
                     :quantity_pending,

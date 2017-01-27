@@ -2,6 +2,8 @@ module ActiveFulfillment
   module DotcomDistribution
 
     class Adjustment
+      include Model
+
       attr_accessor :adjustment_code,
                     :adjustment_desc,
                     :dcd_identifier,
