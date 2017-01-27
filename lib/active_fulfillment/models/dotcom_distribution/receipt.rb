@@ -8,7 +8,10 @@ module ActiveFulfillment
                     :sku,
                     :quantity_received,
                     :item_receipt_date,
-                    :receipt_date
+                    :receipt_date,
+                    :transmission_num, # added by Dotcom 2017-01-23
+                    :transaction_type, # webhook receipt attribute
+                    :transaction_time  # ditty
 
       def self.response_from_xml(xml)
         success = true, message = '', records = []
@@ -23,7 +26,10 @@ module ActiveFulfillment
             sku: el.at('.//sku').try(:text),
             quantity_received: el.at('.//quantity_received').try(:text).try(:to_i),
             item_receipt_date: el.at('.//item_receipt_date').try(:text),
-            receipt_date: el.at('.//receipt_date').try(:text)
+            receipt_date: el.at('.//receipt_date').try(:text),
+            transmission_num: el.at('.//transmission_num').try(:text).try(:to_i),
+            transaction_type: el.attributes['transaction_type'].try(:text),
+            transaction_time: el.attributes['transaction_time'].try(:text)
           }
           records << Receipt.new(hash)
         end
