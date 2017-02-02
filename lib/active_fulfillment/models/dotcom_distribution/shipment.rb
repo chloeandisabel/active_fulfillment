@@ -62,7 +62,7 @@ module ActiveFulfillment
             h[:item_unit_price] = item.at('.//item_unit_price').try(:text)
             h[:order_line_number] = item.at('.//order_line_number').try(:text)
             h[:client_line_number] = item.at('.//client_line_number').try(:text)
-            h[:quantity_shipped] = item.at('.//quantity_shipped').try(:text)
+            h[:quantity_shipped] = item.at('.//quantity_shipped').try(:text).try(:to_i)
             h[:serial_lot_number] = item.at('.//serial_lot_number').try(:text)
             h[:service] = item.at('.//service').try(:text)
             h[:sku] = item.at('.//sku').try(:text)

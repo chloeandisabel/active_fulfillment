@@ -27,7 +27,7 @@ module ActiveFulfillment
 
           hash[:return_items] = el.xpath('.//ret_items//ret_item').collect do |item|
             ReturnItem.new(sku: item.at('.//sku').try(:text),
-                           quantity_returned: item.at('.//quantity_returned').try(:text).to_i,
+                           quantity_returned: item.at('.//quantity_returned').try(:text).try(:to_i),
                            line_number: item.at('.//line_number').try(:text),
                            item_disposition: item.at('.//item_disposition').try(:text),
                            returns_reason_code: item.at('.//returns_reason_code').try(:text),

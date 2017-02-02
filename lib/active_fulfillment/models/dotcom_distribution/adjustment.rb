@@ -30,7 +30,7 @@ module ActiveFulfillment
                                      dcd_identifier: el.at('.//dcd_identifier').try(:text),
                                      old_stock_status_code: el.at('.//old_stock_status_code').try(:text),
                                      old_stock_status_desc: el.at('.//old_stock_status_desc').try(:text),
-                                     quantity: el.at('.//quantity').try(:text),
+                                     quantity: el.at('.//quantity').try(:text).try(:to_i),
                                      sku: el.at('.//sku').try(:text),
                                      stock_status_code: el.at('.//stock_status_code').try(:text),
                                      stock_status_desc: el.at('.//stock_status_desc').try(:text),
