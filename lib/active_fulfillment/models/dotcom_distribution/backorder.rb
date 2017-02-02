@@ -33,9 +33,9 @@ module ActiveFulfillment
             hash[:backorder_items] <<
               BackorderItem.new({vendor: item.at('.//vendor').try(:text),
                                  sku: item.at('.//sku').try(:text),
-                                 quantity_pending: item.at('.//quantity_pending').try(:text),
-                                 quantity_backordered: item.at('.//quantity_backordered').try(:text),
-                                 quantity_available: item.at('.//quantity_available').try(:text)})
+                                 quantity_pending: item.at('.//quantity_pending').try(:text).try(:to_i),
+                                 quantity_backordered: item.at('.//quantity_backordered').try(:text).try(:to_i),
+                                 quantity_available: item.at('.//quantity_available').try(:text).try(:to_i)})
           end
           records << Backorder.new(hash)
         end
