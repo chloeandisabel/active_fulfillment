@@ -1,3 +1,4 @@
+require 'resolv'
 require 'active_support/core_ext/object/to_query'
 
 module ActiveFulfillment
