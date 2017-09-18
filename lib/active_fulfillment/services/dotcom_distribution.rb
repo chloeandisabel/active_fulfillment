@@ -120,9 +120,11 @@ module ActiveFulfillment
     def cancel_order(options = {})
       options = options.dup
       order_number = options.delete(:order_number)
-      delete :cancel, nil, data: <<EOS
-<?xml version="1.0" encoding="UTF-8"?> <orders>
-<order> <order-number>#{order_number}</order-number>
+      delete :cancel_order, nil, data: <<EOS
+<?xml version="1.0" encoding="UTF-8"?>
+<orders>
+  <order>
+    <order-number>#{order_number}</order-number>
   </order>
 </orders>
 EOS
@@ -196,12 +198,7 @@ EOS
     end
 
     def delete(action, resource=nil, data=nil)
-      query = ""
-      if query_hash && query_hash.present?
-        query = query_hash.collect { |k,v| "#{k}=#{CGI.escape(v)}" }.join("&")
-      end
-
-      make_request(:delete, action, resource, query: query)
+      make_request(:delete, action, resource, data: data)
     end
 
     def commit(action, resource=nil, data = nil)
