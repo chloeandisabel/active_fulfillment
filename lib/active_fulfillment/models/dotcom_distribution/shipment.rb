@@ -88,6 +88,7 @@ module ActiveFulfillment
                     :quantity_shipped,
                     :serial_lot_number,
                     :service,
+                    :service_code,
                     :sku,
                     :tracking_number
     end
