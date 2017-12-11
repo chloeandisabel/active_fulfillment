@@ -65,6 +65,7 @@ module ActiveFulfillment
             h[:quantity_shipped] = item.at('.//quantity_shipped').try(:text).try(:to_i)
             h[:serial_lot_number] = item.at('.//serial_lot_number').try(:text)
             h[:service] = item.at('.//service').try(:text)
+            h[:service_code] = item.at('.//service_code').try(:text)
             h[:sku] = item.at('.//sku').try(:text)
             h[:tracking_number] = item.at('.//tracking_number').try(:text)
 
@@ -87,6 +88,7 @@ module ActiveFulfillment
                     :quantity_shipped,
                     :serial_lot_number,
                     :service,
+                    :service_code,
                     :sku,
                     :tracking_number
     end
