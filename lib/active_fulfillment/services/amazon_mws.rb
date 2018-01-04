@@ -6,34 +6,16 @@ require 'active_support/core_ext/hash/except'
 module ActiveFulfillment
   class AmazonMarketplaceWebService < Service
 
-    APPLICATION_IDENTIFIER = "active_merchant_mws/0.01 (Language=ruby)"
+    APPLICATION_IDENTIFIER = 'active_merchant_mws/0.01 (Language=ruby)'.freeze
 
-    REGISTRATION_URI = URI.parse("https://sellercentral.amazon.com/gp/mws/registration/register.html")
+    REGISTRATION_URI = URI.parse('https://sellercentral.amazon.com/gp/mws/registration/register.html').freeze
 
     SIGNATURE_VERSION = 2
-    SIGNATURE_METHOD  = "SHA256"
-    VERSION = "2010-10-01"
+    SIGNATURE_METHOD  = 'SHA256'.freeze
+    VERSION = '2010-10-01'.freeze
 
-    SUCCESS, FAILURE, ERROR = 'Accepted', 'Failure', 'Error'
-
-    MESSAGES = {
-      :status => {
-        'Accepted' => 'Success',
-        'Failure'  => 'Failed',
-        'Error'    => 'An error occurred'
-      },
-      :create => {
-        'Accepted' => 'Successfully submitted the order',
-        'Failure'  => 'Failed to submit the order',
-        'Error'    => 'An error occurred while submitting the order'
-      },
-      :list   => {
-        'Accepted' => 'Successfully submitted request',
-        'Failure'  => 'Failed to submit request',
-        'Error'    => 'An error occurred while submitting request'
-
-      }
-    }
+    SUCCESS, FAILURE, ERROR = 'Accepted'.freeze, 'Failure'.freeze, 'Error'.freeze
+    XML_FAILURE_RESPONSE = { :success => FAILURE }.freeze
 
     ENDPOINTS = {
       :ca => 'mws.amazonservices.ca',
@@ -45,7 +27,7 @@ module ActiveFulfillment
       :jp => 'mws.amazonservices.jp',
       :uk => 'mws-eu.amazonservices.ca',
       :us => 'mws.amazonservices.com'
-    }
+    }.freeze
 
     LOOKUPS = {
       :destination_address => {
@@ -72,43 +54,27 @@ module ActiveFulfillment
       :list_inventory => {
         :sku => "SellerSkus.member.%d"
       }
-    }
+    }.freeze
 
-    ACTIONS = {
-      :outbound => "FulfillmentOutboundShipment",
-      :inventory => "FulfillmentInventory"
-    }
-
-    OPERATIONS = {
-      :outbound => {
-        :status => 'GetServiceStatus',
-        :create => 'CreateFulfillmentOrder',
-        :list   => 'ListAllFulfillmentOrders',
-        :tracking => 'GetFulfillmentOrder'
-      },
-      :inventory => {
-        :get  => 'ListInventorySupply',
-        :list => 'ListInventorySupply',
-        :list_next => 'ListInventorySupplyByNextToken'
-      }
-    }
+    SHIPPING_METHODS = {
+      'Standard Shipping' => 'Standard',
+      'Expedited Shipping' => 'Expedited',
+      'Priority Shipping' => 'Priority'
+    }.freeze
 
     # The first is the label, and the last is the code
     # Standard:  3-5 business days
     # Expedited: 2 business days
     # Priority:  1 business day
     def self.shipping_methods
-      [
-        [ 'Standard Shipping', 'Standard' ],
-        [ 'Expedited Shipping', 'Expedited' ],
-        [ 'Priority Shipping', 'Priority' ]
-      ].inject({}){|h, (k,v)| h[k] = v; h}
+      SHIPPING_METHODS
     end
 
     def initialize(options = {})
       requires!(options, :login, :password)
       @seller_id = options[:seller_id]
       @mws_auth_token = options[:mws_auth_token]
+      @maximum_response_log_size = options[:maximum_response_log_size] || 0
       super
     end
 
@@ -122,23 +88,39 @@ module ActiveFulfillment
 
     def fulfill(order_id, shipping_address, line_items, options = {})
       requires!(options, :order_date, :shipping_method)
-      commit :post, :outbound, :create, build_fulfillment_request(order_id, shipping_address, line_items, options)
+      with_error_handling do
+        data = commit :post, 'FulfillmentOutboundShipment', build_fulfillment_request(order_id, shipping_address, line_items, options)
+        parse_fulfillment_response('Successfully submitted the order')
+      end
     end
 
     def status
-      commit :post, :outbound, :status, build_status_request
+      with_error_handling do
+        data = commit :post, 'FulfillmentOutboundShipment', build_basic_api_query({ :Action => 'GetServiceStatus' })
+        parse_tracking_response(parse_document(data))
+      end
     end
 
     def fetch_current_orders
-      commit :post, :outbound, :status, build_get_current_fulfillment_orders_request
+      with_error_handling do
+        data = commit :post, 'FulfillmentOutboundShipment', build_get_current_fulfillment_orders_request
+        parse_tracking_response(parse_document(data))
+      end
     end
 
     def fetch_stock_levels(options = {})
       options[:skus] = [options.delete(:sku)] if options.include?(:sku)
-      response = commit :post, :inventory, :list, build_inventory_list_request(options)
+      max_retries = options[:max_retries] || 0
 
+      response = with_error_handling(max_retries) do
+        data = commit :post, 'FulfillmentInventory', build_inventory_list_request(options)
+        parse_inventory_response(parse_document(data))
+      end
       while token = response.params['next_token'] do
-        next_page = commit :post, :inventory, :list_next, build_next_inventory_list_request(token)
+        next_page = with_error_handling(max_retries) do
+          data = commit :post, 'FulfillmentInventory', build_next_inventory_list_request(token)
+          parse_inventory_response(parse_document(data))
+        end
 
         # if we fail during the stock-level-via-token gathering, fail the whole request
         return next_page if next_page.params['response_status'] != SUCCESS
@@ -150,17 +132,24 @@ module ActiveFulfillment
     end
 
     def fetch_tracking_data(order_ids, options = {})
+      index = 0
       order_ids.reduce(nil) do |previous, order_id|
-      response = commit :post, :outbound, :tracking, build_tracking_request(order_id, options)
-      return response if !response.success?
+        index += 1
+        response = with_error_handling do
+          data = commit :post, 'FulfillmentOutboundShipment', build_tracking_request(order_id, options)
+          parse_tracking_response(parse_document(data))
+        end
 
-      if previous
-        response.tracking_numbers.merge!(previous.tracking_numbers)
-        response.tracking_companies.merge!(previous.tracking_companies)
-        response.tracking_urls.merge!(previous.tracking_urls)
-      end
+        return response if !response.success?
 
-      response
+        if previous
+          sleep_for_throttle_options(options[:throttle], index)
+          response.tracking_numbers.merge!(previous.tracking_numbers)
+          response.tracking_companies.merge!(previous.tracking_companies)
+          response.tracking_urls.merge!(previous.tracking_urls)
+        end
+
+        response
       end
     end
 
@@ -177,22 +166,22 @@ module ActiveFulfillment
       build_query(params) + "&Signature=#{signature}"
     end
 
-    def commit(verb, service, op, params)
-      uri = URI.parse("https://#{endpoint}/#{ACTIONS[service]}/#{VERSION}")
+    def commit(verb, action, params)
+      uri = URI.parse("https://#{endpoint}/#{action}/#{VERSION}")
       query = build_full_query(verb, uri, params)
       headers = build_headers(query)
+      log_query = query.dup
+      [@options[:login], @options[:app_id], @mws_auth_token].each { |key| log_query.gsub!(key.to_s, '[filtered]') if key.present? }
 
+      logger.info "[#{self.class}][#{action}] query=#{log_query}"
       data = ssl_post(uri.to_s, query, headers)
-      if service == :inventory
-        logger.info "[#{self.class}][inventory] query=#{build_full_query(verb, uri, params.except('AWSAccessKeyId', 'MWSAuthToken'))} response=#{data}"
-      end
-      response = parse_response(service, op, data)
-      Response.new(success?(response), message_from(response), response)
-    rescue ActiveUtils::ResponseError => e
-      handle_error(e)
+      log_data = truncate_long_response(data)
+      logger.info "[#{self.class}][#{action}] response=#{log_data}"
+      data
     end
 
     def handle_error(e)
+      logger.info "[#{self.class}][ResponseError] response=#{e.response.try(:body)}, message=#{e.message}"
       response = parse_error(e.response)
       if response.fetch(:faultstring, "").match(/^Requested order \'.+\' not found$/)
         Response.new(true, nil, {:status => SUCCESS, :tracking_numbers => {}, :tracking_companies => {}, :tracking_urls => {}})
@@ -211,81 +200,67 @@ module ActiveFulfillment
 
     ## PARSING
 
-    def parse_response(service, op, xml)
+    def parse_document(xml)
       begin
-        document = REXML::Document.new(xml)
-      rescue REXML::ParseException
-        return { :success => FAILURE }
-      end
-
-      case service
-      when :outbound
-        case op
-        when :tracking
-          parse_tracking_response(document)
-        else
-          parse_fulfillment_response(op, document)
-        end
-      when :inventory
-        parse_inventory_response(document)
-      else
-        raise ArgumentError, "Unknown service #{service}"
+        document = Nokogiri::XML(xml)
+      rescue Nokogiri::XML::SyntaxError
+        return XML_FAILURE_RESPONSE
       end
     end
 
     def parse_tracking_response(document)
-      response = {}
-      response[:tracking_numbers] = {}
-      response[:tracking_companies] = {}
-      response[:tracking_urls] = {}
+      response = {
+        tracking_numbers: {},
+        tracking_companies: {},
+        tracking_urls: {}
+      }
 
-      tracking_numbers = REXML::XPath.match(document, "//FulfillmentShipmentPackage/member/TrackingNumber")
+      tracking_numbers = document.css('FulfillmentShipmentPackage > member > TrackingNumber'.freeze)
       if tracking_numbers.present?
-        order_id = REXML::XPath.first(document, "//FulfillmentOrder/SellerFulfillmentOrderId").text.strip
+        order_id = document.at_css('FulfillmentOrder > SellerFulfillmentOrderId'.freeze).text.strip
         response[:tracking_numbers][order_id] = tracking_numbers.map{ |t| t.text.strip }
       end
 
-      tracking_companies = REXML::XPath.match(document, "//FulfillmentShipmentPackage/member/CarrierCode")
+      tracking_companies = document.css('FulfillmentShipmentPackage > member > CarrierCode'.freeze)
       if tracking_companies.present?
-        order_id = REXML::XPath.first(document, "//FulfillmentOrder/SellerFulfillmentOrderId").text.strip
+        order_id = document.at_css('FulfillmentOrder > SellerFulfillmentOrderId'.freeze).text.strip
         response[:tracking_companies][order_id] = tracking_companies.map{ |t| t.text.strip }
       end
 
       response[:response_status] = SUCCESS
-      response
+      Response.new(success?(response), message_from(response), response)
     end
 
-    def parse_fulfillment_response(op, document)
-      { :response_status => SUCCESS, :response_comment => MESSAGES[op][SUCCESS] }
+    def parse_fulfillment_response(message)
+      Response.new(true, message, { :response_status => SUCCESS, :response_comment => message })
     end
 
     def parse_inventory_response(document)
-      response = {}
-      response[:stock_levels] = {}
+      response = { stock_levels: {} }
 
-      document.each_element('//InventorySupplyList/member') do |node|
+      document.css('InventorySupplyList > member'.freeze).each do |node|
         params = node.elements.to_a.each_with_object({}) { |elem, hash| hash[elem.name] = elem.text }
 
         response[:stock_levels][params['SellerSKU']] = params['InStockSupplyQuantity'].to_i
       end
 
-      next_token = REXML::XPath.first(document, '//NextToken')
+      next_token = document.at_css('NextToken'.freeze)
       response[:next_token] = next_token ? next_token.text : nil
 
       response[:response_status] = SUCCESS
-      response
+      Response.new(success?(response), message_from(response), response)
     end
 
     def parse_error(http_response)
-      response = {}
-      response[:http_code] = http_response.code
-      response[:http_message] = http_response.message
+      response = {
+        http_code: http_response.code,
+        http_message: http_response.message
+      }
 
-      document = REXML::Document.new(http_response.body)
-
-      node = REXML::XPath.first(document, '//Error')
-      error_code = REXML::XPath.first(node, '//Code')
-      error_message = REXML::XPath.first(node, '//Message')
+      document = Nokogiri::XML(http_response.body)
+      node = document.at_css('Error'.freeze)
+      error_code = node.at_css('Code'.freeze)
+      error_message = node.at_css('Message'.freeze)
 
       response[:status] = FAILURE
       response[:faultcode] = error_code ? error_code.text : ""
@@ -293,7 +268,7 @@ module ActiveFulfillment
       response[:response_message] = error_message ? error_message.text : ""
       response[:response_comment] = "#{response[:faultcode]}: #{response[:faultstring]}"
       response
-    rescue REXML::ParseException => e
+    rescue Nokogiri::XML::SyntaxError => e
     rescue NoMethodError => e
       response[:http_body] = http_response.body
       response[:response_status] = FAILURE
@@ -360,7 +335,7 @@ module ActiveFulfillment
 
     def build_fulfillment_request(order_id, shipping_address, line_items, options)
       params = {
-        :Action => OPERATIONS[:outbound][:create],
+        :Action => 'CreateFulfillmentOrder',
         :SellerFulfillmentOrderId => order_id.to_s,
         :DisplayableOrderId => order_id.to_s,
         :DisplayableOrderDateTime => options[:order_date].utc.iso8601,
@@ -378,7 +353,7 @@ module ActiveFulfillment
     def build_get_current_fulfillment_orders_request(options = {})
       start_time = options.delete(:start_time) || 1.day.ago.utc
       params = {
-        :Action => OPERATIONS[:outbound][:list],
+        :Action => 'ListAllFulfillmentOrders',
         :QueryStartDateTime => start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
       }
 
@@ -388,7 +363,7 @@ module ActiveFulfillment
     def build_inventory_list_request(options = {})
       response_group = options.delete(:response_group) || "Basic"
       params = {
-        :Action => OPERATIONS[:inventory][:list],
+        :Action => 'ListInventorySupply',
         :ResponseGroup => response_group
       }
       if skus = options.delete(:skus)
@@ -406,14 +381,14 @@ module ActiveFulfillment
     def build_next_inventory_list_request(token)
       params = {
         :NextToken => token,
-        :Action => OPERATIONS[:inventory][:list_next]
+        :Action => 'ListInventorySupplyByNextToken'
       }
 
       build_basic_api_query(params)
     end
 
     def build_tracking_request(order_id, options)
-      params = {:Action => OPERATIONS[:outbound][:tracking], :SellerFulfillmentOrderId => order_id}
+      params = {:Action => 'GetFulfillmentOrder', :SellerFulfillmentOrderId => order_id}
 
       build_basic_api_query(params.merge(options))
     end
@@ -421,8 +396,9 @@ module ActiveFulfillment
     def build_address(address)
       requires!(address, :name, :address1, :city, :country, :zip)
       address[:state] ||= "N/A"
-      address[:zip].upcase!
+      address[:zip].upcase! if address[:zip]
       address[:name] = "#{address[:company]} - #{address[:name]}" if address[:company].present?
+      address[:name] = address[:name][0...50] if address[:name].present?
       ary = address.map{ |key, value| [LOOKUPS[:destination_address][key], value] if LOOKUPS[:destination_address].include?(key) && value.present? }
       Hash[ary.compact]
     end
@@ -449,15 +425,38 @@ module ActiveFulfillment
       end
     end
 
-    def build_status_request
-      build_basic_api_query({ :Action => OPERATIONS[:outbound][:status] })
-    end
-
     def escape(str)
       CGI.escape(str.to_s).gsub('+', '%20')
     end
 
     private
+
+    def with_error_handling(max_retries = 0)
+      retries = 0
+      begin
+        yield
+      rescue ActiveUtils::ResponseError => e
+        if e.response.code == 503 && retries < max_retries
+          retries += 1
+          retry
+        else
+          handle_error(e)
+        end
+      end
+    end
+
+    def sleep_for_throttle_options(throttle_options, index)
+      return unless interval = throttle_options.try(:[], :interval)
+      sleep(throttle_options[:sleep_time]) if (index % interval).zero?
+    end
+
+    def truncate_long_response(data)
+      return data unless @maximum_response_log_size > 0
+      return data unless @maximum_response_log_size < data.length
+
+      truncated = data.slice(0, @maximum_response_log_size)
+      "#{truncated}[...TRUNCATED...]"
+    end
 
     def secure_compare(a, b)
       return false unless a.bytesize == b.bytesize

@@ -1,7 +1,32 @@
 # ActiveFulfillment changelog
 
-## Unreleased
+### Version 3.2.2
+- Add an option to retry Amazon requests upon getting a 503.
 
+### Version 3.2.1
+
+- Allow truncating the Amazon response log.
+
+### Version 3.2.0
+
+- Add support for ActiveSupport 5.1
+
+### Version 3.1.1 (March 2017)
+
+- Bump Nokogiri dependency >= 1.6.8.
+
+### Version 3.1.0 (March 2017)
+
+- Update dependencies
+
+### Version 3.0.1 (January 2015)
+
+- Use Nokogiri for all xml handling.
+- Ruby 2.3.0 support.
+- Refactor Amazon MWS calls/parsing.
+- Freeze constants and hashes.
+
+### Version 2.1.8
 - Update dependencies
 - Remove old Amazon fulfillment service (use amazon_aws instead)
 - Add contributing guidelines

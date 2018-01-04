@@ -3,12 +3,14 @@ require 'test_helper'
 class ShipwireTest < Minitest::Test
   include ActiveFulfillment::Test::Fixtures
 
+  PASSWORD = 'test_password'
+
   def setup
     ActiveFulfillment::Base.mode = :test
 
     @shipwire = ActiveFulfillment::ShipwireService.new(
                   :login => 'cody@example.com',
-                  :password => 'test'
+                  :password => PASSWORD
                 )
 
     @options = {
@@ -32,7 +34,7 @@ class ShipwireTest < Minitest::Test
 
   def test_missing_login
     assert_raises(ArgumentError) do
-      ActiveFulfillment::ShipwireService.new(:password => 'test')
+      ActiveFulfillment::ShipwireService.new(:password => PASSWORD)
     end
   end
 
@@ -44,20 +46,20 @@ class ShipwireTest < Minitest::Test
 
   def test_missing_credentials
     assert_raises(ArgumentError) do
-      ActiveFulfillment::ShipwireService.new(:password => 'test')
+      ActiveFulfillment::ShipwireService.new(:password => PASSWORD)
     end
   end
 
   def test_credentials_present
     assert ActiveFulfillment::ShipwireService.new(
       :login    => 'cody',
-      :password => 'test'
+      :password => PASSWORD
     )
   end
 
   def test_country_format
-    xml = REXML::Document.new(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
-    country_node = REXML::XPath.first(xml, "//Country")
+    xml = Nokogiri::XML(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
+    country_node = xml.at_xpath(xml, "//Country")
     assert_equal 'US', country_node.text
   end
 
@@ -69,6 +71,36 @@ class ShipwireTest < Minitest::Test
     assert_equal 926, response.stock_levels['BlackDog']
     assert_equal -1, response.stock_levels['MoustacheCat']
     assert_equal 677, response.stock_levels['KingMonkey']
+  end
+
+  def test_stock_levels_parses_invalid_credentials
+    @shipwire.expects(:ssl_post).returns(xml_fixture('shipwire/invalid_login_inventory_update_response'))
+
+    response = @shipwire.fetch_stock_levels
+    refute response.success?
+    assert_equal 'Error with Valid Username/EmailAddress and Password Required. There is an error in XML document.', response.message
+  end
+
+  def test_stock_levels_logs_request_and_response
+    @shipwire.class.logger.expects(:info).with do |message|
+      assert_match /InventoryUpdate/, message unless message.include?('InventoryUpdateResponse')
+      refute message.include?(PASSWORD)
+      true
+    end.twice
+
+    @shipwire.expects(:ssl_post).returns(xml_fixture('shipwire/inventory_get_response'))
+    response = @shipwire.fetch_stock_levels
+  end
+
+  def test_logging_with_specific_passwords
+    @shipwire = ActiveFulfillment::ShipwireService.new(login: 'cody@example.com', password: 345)
+    @shipwire.class.logger.expects(:info).with do |message|
+      refute message.include?('345')
+      true
+    end.twice
+
+    @shipwire.stubs(:ssl_post).returns(xml_fixture('shipwire/inventory_get_response'))
+    response = @shipwire.fetch_stock_levels
   end
 
   def test_stock_levels_include_pending_when_set
@@ -93,8 +125,8 @@ class ShipwireTest < Minitest::Test
                   :password => 'test',
                   :include_empty_stock => true
                 )
-    xml = REXML::Document.new(@shipwire.send(:build_inventory_request, {}))
-    assert REXML::XPath.first(xml, '//IncludeEmpty')
+    xml = Nokogiri::XML(@shipwire.send(:build_inventory_request, {}))
+    assert xml.at_xpath(xml, '//IncludeEmpty')
   end
 
   def test_no_tracking_numbers_available
@@ -164,29 +196,30 @@ class ShipwireTest < Minitest::Test
 
   def test_affiliate_id
     ActiveFulfillment::ShipwireService.affiliate_id = 'affiliate_id'
-
-    xml = REXML::Document.new(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
-    affiliate_id = REXML::XPath.first(xml, "//AffiliateId")
+    xml = Nokogiri::XML(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
+    affiliate_id = xml.at_xpath(xml, "//AffiliateId")
     assert_equal 'affiliate_id', affiliate_id.text
   end
 
   def test_company_name_in_request
-    xml = REXML::Document.new(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
-    company_node = REXML::XPath.first(xml, "//Company")
+    xml = Nokogiri::XML(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
+    company_node = xml.at_xpath(xml, "//Company")
     assert_equal 'MyCorp', company_node.text
   end
 
   def test_order_excludes_note_by_default
-    xml = REXML::Document.new(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
-    note_node = REXML::XPath.first(xml, "//Note").cdatas.first
-    assert_nil note_node
+    xml = Nokogiri::XML(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
+    note_node = xml.at_xpath(xml, "//Note")
+    assert_equal 0, note_node.children.select { |child| child.cdata? }.size
+    assert_equal false, note_node.cdata?
   end
 
   def test_order_includes_note_when_present
     @options[:note] = "A test note"
-    xml = REXML::Document.new(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
-    note_node = REXML::XPath.first(xml, "//Note").cdatas.first
-    assert_equal "A test note", note_node.to_s
+    xml = Nokogiri::XML(@shipwire.send(:build_fulfillment_request, '123456', @address, @line_items, @options))
+    note_node = xml.at_xpath(xml, "//Note")
+    assert_equal "A test note", note_node.text.strip
+    assert_equal note_node.children.select { |child| child.cdata? }.size, 1
   end
 
   def test_error_response_cdata_parsing

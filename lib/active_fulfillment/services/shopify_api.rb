@@ -1,14 +1,14 @@
 require 'active_support/core_ext/object/to_query'
+require 'resolv'
 
 module ActiveFulfillment
   class ShopifyAPIService < Service
 
-    OrderIdCutoffDate = Date.iso8601("2015-03-01")
+    OrderIdCutoffDate = Date.iso8601('2015-03-01').freeze
 
     RESCUABLE_CONNECTION_ERRORS = [
       Net::ReadTimeout,
       Net::OpenTimeout,
-      TimeoutError,
       Errno::ETIMEDOUT,
       Timeout::Error,
       IOError,
@@ -28,7 +28,7 @@ module ActiveFulfillment
       ActiveUtils::ConnectionError,
       ActiveUtils::ResponseError,
       ActiveUtils::InvalidResponseError
-    ]
+    ].freeze
 
     def initialize(options = {})
       @name = options[:name]
@@ -37,27 +37,27 @@ module ActiveFulfillment
     end
 
     def fulfill(order_id, shipping_address, line_items, options = {})
-      raise NotImplementedError.new("Shopify API Service must listen to fulfillment/create Webhooks")
+      raise NotImplementedError.new('Shopify API Service must listen to fulfillment/create Webhooks'.freeze)
     end
 
     def fetch_stock_levels(options = {})
-      response = send_app_request('fetch_stock', options.delete(:headers), options)
+      response = send_app_request('fetch_stock'.freeze, options.delete(:headers), options)
       if response
-        stock_levels = parse_response(response, 'StockLevels', 'Product', 'Sku', 'Quantity') { |p| p.to_i }
-        Response.new(true, "API stock levels", {:stock_levels => stock_levels})
+        stock_levels = parse_response(response, 'StockLevels'.freeze, 'Product'.freeze, 'Sku'.freeze, 'Quantity'.freeze) { |p| p.to_i }
+        Response.new(true, 'API stock levels'.freeze, {:stock_levels => stock_levels})
       else
-        Response.new(false, "Unable to fetch remote stock levels")
+        Response.new(false, 'Unable to fetch remote stock levels'.freeze)
       end
     end
 
     def fetch_tracking_data(order_numbers, options = {})
-      options.merge!({:order_ids => order_numbers, :order_names => order_numbers})
-      response = send_app_request('fetch_tracking_numbers', options.delete(:headers), options)
+      options.merge!({:order_names => order_numbers})
+      response = send_app_request('fetch_tracking_numbers'.freeze, options.delete(:headers), options)
       if response
-        tracking_numbers = parse_response(response, 'TrackingNumbers', 'Order', 'ID', 'Tracking') { |o| o }
-        Response.new(true, "API tracking_numbers", {:tracking_numbers => tracking_numbers,
-                                                    :tracking_companies => {},
-                                                    :tracking_urls => {}})
+        tracking_numbers = parse_response(response, 'TrackingNumbers'.freeze, 'Order'.freeze, 'ID'.freeze, 'Tracking'.freeze) { |o| o }
+        Response.new(true, 'API tracking_numbers'.freeze, {:tracking_numbers => tracking_numbers,
+                                                           :tracking_companies => {},
+                                                           :tracking_urls => {}})
       else
         Response.new(false, "Unable to fetch remote tracking numbers #{order_numbers.inspect}")
       end
@@ -72,7 +72,8 @@ module ActiveFulfillment
     def send_app_request(action, headers, data)
       uri = request_uri(action, data)
 
-      logger.info "[" + @name.upcase + " APP] Post #{uri}"
+      log :info, "GET action=#{action}"
+      log :debug, "GET url=#{uri}"
 
       response = nil
       realtime = Benchmark.realtime do
@@ -81,45 +82,53 @@ module ActiveFulfillment
             response = ssl_get(uri, headers)
           end
         rescue *(RESCUABLE_CONNECTION_ERRORS) => e
-          logger.warn "[#{self}] Error while contacting fulfillment service error =\"#{e.message}\""
+          log :warn, "Error contacting fulfillment service exception=\"#{e.class}\" message=\"#{e.message}\""
         end
       end
 
-      line = "[" + @name.upcase + "APP] Response from #{uri} --> "
-      line << "#{response} #{"%.4fs" % realtime}"
-      logger.info line
+      log :info, "GET response action=#{action} in #{"%.4fs" % realtime} #{response}"
 
       response
     end
 
-    def parse_response(response, root, type, key, value)
-      case @format
-      when 'json'
-        response_data = ActiveSupport::JSON.decode(response)
-        return {} unless response_data.is_a?(Hash)
-        response_data[root.underscore] || response_data
-      when 'xml'
-        response_data = {}
-        document = REXML::Document.new(response)
-        document.elements[root].each do |node|
-          if node.name == type
-            response_data[node.elements[key].text] = node.elements[value].text
-          end
-        end
-        response_data
-      end
+    def parse_json(json_data, root)
+      response_data = ActiveSupport::JSON.decode(json_data)
+      return {} unless response_data.is_a?(Hash)
+      response_data[root.underscore] || response_data
+    rescue ActiveSupport::JSON.parse_error
+      {}
+    end
 
-    rescue ActiveSupport::JSON.parse_error, REXML::ParseException
+    def parse_xml(xml_data, type, key, value)
+      Parsing.with_xml_document(xml_data) do |document, response|
+        # Extract All elements of type and map them!
+        root_element = document.xpath("//#{type}")
+        root_element.each do |type_item|
+          key_item = type_item.at_css(key).child.content
+          value_item = type_item.at_css(value).child.content
+          response[key_item] = value_item
+        end
+        response
+      end
+    end
+
+    def parse_response(response, root, type, key, value)
+      return parse_json(response, root) if @format == 'json'.freeze
+      return parse_xml(response, type, key, value) if @format == 'xml'.freeze
       {}
     end
 
     def encode_payload(payload, root)
       case @format
-      when 'json'
+      when 'json'.freeze
         {root => payload}.to_json
-      when 'xml'
+      when 'xml'.freeze
         payload.to_xml(:root => root)
       end
+    end
+
+    def log(level, message)
+      logger.public_send(level, "[ActiveFulfillment::ShopifyAPIService][#{@name.upcase} app] #{message}")
     end
   end
 end
