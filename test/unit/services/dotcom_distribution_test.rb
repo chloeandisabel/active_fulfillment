@@ -64,7 +64,6 @@ class DotcomDistributionTest < Minitest::Test
       expected_on_dock: Time.now.strftime("%Y-%m-%d"),
       items: [@item.merge(quantity: 1)]
     }
-    @purchase_orders = [@purchase_order]
   end
 
   def test_fulfillment_successful
@@ -160,7 +159,7 @@ class DotcomDistributionTest < Minitest::Test
     @service.expects(:ssl_request).with do |verb, url, data, headers|
       verb == :post
     end.returns(successful_purchase_order_response)
-    response = @service.purchase_order(@purchase_orders)
+    response = @service.purchase_order(@purchase_order)
     # TODO: we should be using Response.new success with success rather than nil
     assert_nil response
   end
