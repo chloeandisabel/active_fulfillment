@@ -51,6 +51,10 @@ module ActiveFulfillment
       @base_url = test? ? BASE_URL[:test] : BASE_URL[:live]
     end
 
+    def test_mode?
+      true
+    end
+
     def sign(uri)
       digest = OpenSSL::Digest.new(SIGNATURE_METHOD)
       hmac = Base64.encode64(OpenSSL::HMAC.digest(digest, @options[:password], uri)).chomp
