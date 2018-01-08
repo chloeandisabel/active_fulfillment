@@ -6,7 +6,7 @@ class IDSFulfillmentTest < Minitest::Test
 
     @options = {
       carrier_code: "FEDG",
-      ship_type: 6,
+      ship_type: 6
     }
 
     @address = {
@@ -25,14 +25,22 @@ class IDSFulfillmentTest < Minitest::Test
   end
 
   def test_fulfill
+    options = @options.merge(extra_data: [{
+      label: "TestLabel",
+      length: 2,
+      value: "Hi"
+    }])
     @service.expects(:ssl_request).with do |verb, url, data, headers|
       verb == :post &&
         url.end_with?("/request/ship") &&
         data.include?('"CustomerOrderReferenceNumber":"H0000000001"') &&
         data.include?('"SKU":"N001"') &&
+        data.include?('"ExtraDataFieldLabel":"TestLabel"') &&
+        data.include?('"ExtraDataFieldLength":2') &&
+        data.include?('"ExtraDataFieldValue":"Hi"') &&
         headers.key?("ApiKey")
     end.returns("{}")
-    @service.fulfill("H0000000001", @address, @line_items, @options)
+    @service.fulfill("H0000000001", @address, @line_items, options)
   end
 
   def test_fulfill_multiple
