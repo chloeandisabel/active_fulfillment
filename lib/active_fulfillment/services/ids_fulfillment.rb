@@ -22,7 +22,7 @@ module ActiveFulfillment
     end
 
     def fulfill_multiple(orders)
-      make_request(:post, "/request/ship", request_to_ship(orders).to_json)
+      make_request(:post, "/request/ship", data: request_to_ship(orders).to_json)
     end
 
     # +order_id+ may be nil or unspecified (not yet sent shipment
@@ -34,10 +34,10 @@ module ActiveFulfillment
         when nil
           ""
         else
-          "?customerOrderReferenceNumbers=#{Array.wrap(order_id).join(",")}"
+          "customerOrderReferenceNumbers=#{Array.wrap(order_id).join(",")}"
         end
 
-      make_request(:get, "/request/ship#{query_string}")
+      make_request(:get, "/request/ship", query: query_string)
     end
 
     def fetch_stock_levels(_options = {})
@@ -56,10 +56,19 @@ module ActiveFulfillment
                              tracking_urls: [])
     end
 
+    def receipt(reference_number)
+      make_request(:get, "/request/inventoryreceipt/#{reference_number}")
+    end
+
+    def receipts
+      make_request(:get, "/request/inventoryreceipt")
+    end
+
     private
 
-    def make_request(verb, path, data = nil)
-      response = ssl_request(verb, "#{@base_url}#{path}", data, headers)
+    def make_request(verb, path, data: nil, query: nil)
+      url = query.present? ? "#{@base_url}#{path}?#{query}" : "#{@base_url}#{path}"
+      response = ssl_request(verb, url, data, headers)
       Response.new(true, "", parse_response(response))
     rescue ActiveUtils::ResponseError => e
       response = {
@@ -95,19 +104,29 @@ module ActiveFulfillment
 
     def order_data(order_id, shipping_address, line_items, options = {})
       validate_order_options!(options)
-      {
-        requesttoship: {
-          "Orders" => [{
-            "CustomerOrderReferenceNumber" => order_id,
-            "CosigneePONumber" => options[:cosignee_po_number],
-            "ScheduledShipDate" => options[:ship_date],
-            "CarrierCode" => options[:carrier_code],
-            "ShipType" => options[:ship_type],
-            "OrderItems" => line_items_data(line_items),
-            "ShipToAddress" => shipping_address_data(shipping_address)
-          }]
-        }
+      order_data = {
+        "CustomerOrderReferenceNumber" => order_id,
+        "CosigneePONumber" => options[:cosignee_po_number],
+        "ScheduledShipDate" => options[:ship_date],
+        "CarrierCode" => options[:carrier_code],
+        "ShipType" => options[:ship_type],
+        "OrderItems" => line_items_data(line_items),
+        "ShipToAddress" => shipping_address_data(shipping_address)
       }
+      if options[:extra_data]
+        order_data.update("OrderExtraDataFields" => extract_extra_data(options[:extra_data]))
+      end
+      order_data
+    end
+
+    def extract_extra_data(extra_data)
+      extra_data.map do |data|
+        {
+          "ExtraDataFieldLabel" => data[:label],
+          "ExtraDataFieldLength" => data[:length],
+          "ExtraDataFieldValue" => data[:value]
+        }
+      end
     end
 
     def shipping_address_data(shipping_address)
@@ -131,10 +150,14 @@ module ActiveFulfillment
 
     def line_item_data(line_item)
       validate_line_item!(line_item)
-      {
+      line_item = {
         "SKU" => line_item[:sku],
         "QuantityOrdered" => line_item[:quantity]
       }
+      if line_item[:extra_data]
+        line_item.update("OrderItemExtraDataFields" => extract_extra_data(options[:extra_data]))
+      end
+      line_item
     end
 
     # Options:
