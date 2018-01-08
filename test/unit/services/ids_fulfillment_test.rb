@@ -84,6 +84,15 @@ class IDSFulfillmentTest < Minitest::Test
     end
   end
 
+  def test_validate_line_item
+    [:sku, :quantity].each do |required_field|
+      assert_raises(ArgumentError) do
+        line_item = @line_items.first.dup.tap { |li| li.delete(required_field) }
+        @service.send(:validate_line_item!, line_item)
+      end
+    end
+  end
+
   def test_shipping_address_data
     @address[:phone] = "(555)555-5555"
     @address[:email] = "janesmith@gmail.com"
@@ -100,6 +109,13 @@ class IDSFulfillmentTest < Minitest::Test
       "Zip" => "90210",
       "CountryCode" => "US"
     })
+  end
+
+  def test_line_item_data
+    assert_equal(@service.send(:line_items_data, @line_items), [{
+      "SKU" => "N001",
+      "QuantityOrdered" => 1
+    }])
   end
 
   private
