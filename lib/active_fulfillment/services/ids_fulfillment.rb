@@ -64,6 +64,11 @@ module ActiveFulfillment
       make_request(:get, "/request/inventoryreceipt")
     end
 
+    def inventory_receipt(reference_number, items)
+      make_request(:post, "/request/inventoryreceipt",
+                   data: inventory_receipt_data(reference_number, items).to_json)
+    end
+
     private
 
     def make_request(verb, path, data: nil, query: nil)
@@ -100,6 +105,22 @@ module ActiveFulfillment
         "Accept" => "application/json",
         "Content-Type" => "application/json",
       }
+    end
+
+    def inventory_receipt_data(reference_number, items)
+      {
+        "Tallies": [
+          {
+            "CustomerReferenceNumber": reference_number,
+            "TallyDetails": items.map { |item| item_data(item) }
+          }
+        ]
+      }
+    end
+
+    def item_data(item)
+      validate_line_item!(item)
+      { "ItemCode": item[:sku], "QuantityInTransit": item[:quantity] }
     end
 
     def order_data(order_id, shipping_address, line_items, options = {})
