@@ -60,13 +60,13 @@ module ActiveFulfillment
       make_request(:get, "/request/inventoryreceipt/#{reference_number}")
     end
 
-    def receipts
+    def unsent_receipts
       make_request(:get, "/request/inventoryreceipt")
     end
 
-    def inventory_receipt(reference_number, items)
+    def inventory_receipt(reference_number, items, options = {})
       make_request(:post, "/request/inventoryreceipt",
-                   data: inventory_receipt_data(reference_number, items).to_json)
+                   data: inventory_receipt_data(reference_number, items, options).to_json)
     end
 
     private
@@ -107,15 +107,15 @@ module ActiveFulfillment
       }
     end
 
-    def inventory_receipt_data(reference_number, items)
-      {
-        "Tallies": [
-          {
-            "CustomerReferenceNumber": reference_number,
-            "TallyDetails": items.map { |item| item_data(item) }
-          }
-        ]
+    def inventory_receipt_data(reference_number, items, options)
+      tally = {
+        "CustomerReferenceNumber": reference_number,
+        "TallyDetails": items.map { |item| item_data(item) }
       }
+      if options[:return_authorization_number]
+        tally["ReturnAuthorizationNumber"] = options[:return_authorization_number]
+      end
+      { "Tallies": [ tally ] }
     end
 
     def item_data(item)
