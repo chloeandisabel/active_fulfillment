@@ -128,6 +128,7 @@ module ActiveFulfillment
       order_data = {
         "CustomerOrderReferenceNumber" => order_id,
         "CosigneePONumber" => options[:cosignee_po_number],
+        "ProNumber" => options[:pro_number],
         "ScheduledShipDate" => options[:ship_date],
         "CarrierCode" => options[:carrier_code],
         "ShipType" => options[:ship_type],
@@ -137,7 +138,20 @@ module ActiveFulfillment
       if options[:extra_data]
         order_data.update("OrderExtraDataFields" => extract_extra_data(options[:extra_data]))
       end
+      if options[:comments]
+        order_data.update("OrderComments" => extract_comments(options[:comments]))
+      end
       order_data
+    end
+
+    def extract_comments(comments)
+      comments.map.with_index do |comment, index|
+        {
+          "PrintSequence" => (index + 1).to_s,
+          "PrintLabel" => comment[:label],
+          "CommentText" => comment[:text]
+        }
+      end
     end
 
     def extract_extra_data(extra_data)
