@@ -118,9 +118,9 @@ module ActiveFulfillment
           "CustomerReferenceNumber": reference_number,
           "TallyDetails": items.map { |item| item_data(item) }
         }
-        if options[:return_authorization_number]
-          tally["ReturnAuthorizationNumber"] = options[:return_authorization_number]
-        end
+        copy_updates!(tally, options,
+                      return_authorization_number: "ReturnAuthorizationNumber",
+                      scheduled_arrival_date: "ScheduledArrivalDate")
         tally
       end
       { "Tallies": tallies }
@@ -193,18 +193,21 @@ module ActiveFulfillment
 
     def line_item_data(line_item)
       validate_line_item!(line_item)
-      line_item = {
+      data = {
         "SKU" => line_item[:sku],
         "QuantityOrdered" => line_item[:quantity]
       }
       if line_item[:extra_data]
-        line_item.update("OrderItemExtraDataFields" => extract_extra_data(options[:extra_data]))
+        data.update(
+          "OrderItemExtraDataFields" =>
+            extract_extra_data(line_item[:extra_data])
+        )
       end
-      line_item
+      data
     end
 
     # Options:
-    # - :ship_type - Integer. IDS Internal Field. Truckload/LDL - 2, Partial - 6
+    # - :ship_type - Integer. IDS Internal Field. Truckload/LTL - 2, Partial - 6
     # - :carrier_code - String. Code of designated shipping method. Contact IDS
     #   to get a list
     # - :ship_date - DateTime. in MDT.
@@ -221,6 +224,12 @@ module ActiveFulfillment
 
     def validate_shipping_address!(shipping_address)
       requires!(shipping_address, :name, :address1, :city, :state, :zip_code, :country_code)
+    end
+
+    def copy_updates!(destination, source, attribute_mapping)
+      attribute_mapping.each do |source_attr, destination_attr|
+        destination.update(destination_attr => source[source_attr]) if source[source_attr]
+      end
     end
   end
 end
