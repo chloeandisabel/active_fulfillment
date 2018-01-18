@@ -80,10 +80,12 @@ class IDSFulfillmentTest < Minitest::Test
         data.include?('"ItemCode":"N001"') &&
         data.include?('"QuantityInTransit":2') &&
         data.include?('"ReturnAuthorizationNumber":"RMA0000000001"') &&
+        data.include?('"ScheduledArrivalDate":"2018-01-01"')
         headers.key?("ApiKey")
     end.returns("{}")
     @service.inventory_receipt("CI001", [{ sku: "N001", quantity: 2 }],
-                               return_authorization_number: "RMA0000000001")
+                               return_authorization_number: "RMA0000000001",
+                              scheduled_arrival_date: "2018-01-01")
   end
 
   def test_fetch_tracking_data
