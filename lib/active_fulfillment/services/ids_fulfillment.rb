@@ -3,7 +3,7 @@ module ActiveFulfillment
 
     BASE_URLS = {
       production: "https://api.teamidslogistics.com",
-      test: "https://api.teamidslogistics.com"
+      test: "https://dev.teamidslogistics.com"
     }.freeze
 
     def initialize(options = {})
