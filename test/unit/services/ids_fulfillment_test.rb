@@ -60,6 +60,32 @@ class IDSFulfillmentTest < Minitest::Test
     ])
   end
 
+  def test_inventory_receipt
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post &&
+        url.end_with?("/request/inventoryreceipt") &&
+        data.include?('"CustomerReferenceNumber":"CI001"') &&
+        data.include?('"ItemCode":"N001"') &&
+        data.include?('"QuantityInTransit":2') &&
+        headers.key?("ApiKey")
+    end.returns("{}")
+    @service.inventory_receipt("CI001", [{ sku: "N001", quantity: 2 }])
+  end
+
+  def test_inventory_receipt_with_options
+    @service.expects(:ssl_request).with do |verb, url, data, headers|
+      verb == :post &&
+        url.end_with?("/request/inventoryreceipt") &&
+        data.include?('"CustomerReferenceNumber":"CI001"') &&
+        data.include?('"ItemCode":"N001"') &&
+        data.include?('"QuantityInTransit":2') &&
+        data.include?('"ReturnAuthorizationNumber":"RMA0000000001"') &&
+        headers.key?("ApiKey")
+    end.returns("{}")
+    @service.inventory_receipt("CI001", [{ sku: "N001", quantity: 2 }],
+                               return_authorization_number: "RMA0000000001")
+  end
+
   def test_fetch_tracking_data
     @service.expects(:ssl_request).with do |verb, url, data, headers|
       verb == :get &&
