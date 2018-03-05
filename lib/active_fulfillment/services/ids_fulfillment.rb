@@ -96,11 +96,9 @@ module ActiveFulfillment
 
     def request_to_ship(orders)
       {
-        requesttoship: {
-          "Orders" => orders.map do |order_id, shipping_address, line_items, options|
-            order_data(order_id, shipping_address, line_items, options)
-          end
-        }
+        "Orders" => orders.map do |order_id, shipping_address, line_items, options|
+          order_data(order_id, shipping_address, line_items, options)
+        end
       }
     end
 
