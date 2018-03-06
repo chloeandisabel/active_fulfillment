@@ -47,13 +47,13 @@ module ActiveFulfillment
     def fetch_tracking_data(order_ids, _options = {})
       response = get_order_status(order_ids)
       return response unless response.success?
-      tracking_numbers = response.params["Orders"].flat_map do |order|
-        order["Packages"].map { |package| package["PackageNumber"] }
+      tracking_numbers_and_urls = response.params["Orders"].flat_map do |order|
+        order["Packages"].map { |package| [package["PackageNumber"], package["TrackingUrl"]] }
       end
       tracking_companies = response.params["Orders"].map { |order| order["CarrierCode"] }
       Response.new(true, "", tracking_companies: tracking_companies,
-                             tracking_numbers: tracking_numbers,
-                             tracking_urls: [])
+                             tracking_numbers: tracking_numbers_and_urls.map(&:first),
+                             tracking_urls: tracking_numbers_and_urls.map(&:last))
     end
 
     def receipt(reference_number)
