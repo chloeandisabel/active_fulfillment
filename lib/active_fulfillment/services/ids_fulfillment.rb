@@ -78,7 +78,7 @@ module ActiveFulfillment
     def make_request(verb, path, data: nil, query: nil)
       url = query.present? ? "#{@base_url}#{path}?#{query}" : "#{@base_url}#{path}"
       response = ssl_request(verb, url, data, headers)
-      Response.new(true, "", parse_response(response))
+      Response.new(true, "", parse_response(path, response))
     rescue ActiveUtils::ResponseError => e
       response = {
         http_code: e.response.code,
@@ -89,7 +89,7 @@ module ActiveFulfillment
 
     # We extracted this method to allow subclasses to override it in cases
     # where we want to log the raw response.
-    def parse_response(response)
+    def parse_response(path, response)
       response = "{}" if response == nil || response == ""
       JSON.parse(response)
     end
