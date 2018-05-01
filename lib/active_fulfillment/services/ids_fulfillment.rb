@@ -134,14 +134,19 @@ module ActiveFulfillment
       validate_order_options!(options)
       order_data = {
         "CustomerOrderReferenceNumber" => order_id,
-        "ConsigneePONumber" => options[:consignee_po_number],
-        "ProNumber" => options[:pro_number],
-        "ScheduledShipDate" => options[:ship_date],
-        "CarrierCode" => options[:carrier_code],
-        "ShipType" => options[:ship_type],
         "OrderItems" => line_items_data(line_items),
-        "ShipToAddress" => shipping_address_data(shipping_address)
+        "ShipToAddress" => shipping_address_data(shipping_address),
+        "CarrierCode" => options[:carrier_code],
+        "ShipType" => options[:ship_type]
       }
+      {
+        "ConsigneePONumber" => :consignee_po_number,
+        "ProNumber" => :pro_number,
+        "ScheduledShipDate" => :ship_date
+      }.each do |key, opt_sym|
+        order_data[key] = options[:opt_sym] if options[:opt_sym]
+      end
+
       if options[:extra_data]
         order_data.update("OrderExtraDataFields" => extract_extra_data(options[:extra_data]))
       end
