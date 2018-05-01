@@ -134,7 +134,7 @@ module ActiveFulfillment
       validate_order_options!(options)
       order_data = {
         "CustomerOrderReferenceNumber" => order_id,
-        "CosigneePONumber" => options[:cosignee_po_number],
+        "ConsigneePONumber" => options[:consignee_po_number],
         "ProNumber" => options[:pro_number],
         "ScheduledShipDate" => options[:ship_date],
         "CarrierCode" => options[:carrier_code],
