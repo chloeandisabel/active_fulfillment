@@ -142,9 +142,10 @@ module ActiveFulfillment
       {
         "ConsigneePONumber" => :consignee_po_number,
         "ProNumber" => :pro_number,
-        "ScheduledShipDate" => :ship_date
+        "ScheduledShipDate" => :ship_date,
+        "ScheduledArrivalDate" => :arrival_date
       }.each do |key, opt_sym|
-        order_data[key] = options[:opt_sym] if options[:opt_sym]
+        order_data[key] = options[opt_sym] if options[opt_sym]
       end
 
       if options[:extra_data]
