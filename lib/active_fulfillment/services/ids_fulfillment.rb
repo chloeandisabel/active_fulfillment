@@ -90,7 +90,7 @@ module ActiveFulfillment
     # We extracted this method to allow subclasses to override it in cases
     # where we want to log the raw response.
     def parse_response(path, response)
-      response = "{}" if response == nil || response == ""
+      response = "{}" if response == nil || response == "" || response == "null"
       JSON.parse(response)
     end
 
