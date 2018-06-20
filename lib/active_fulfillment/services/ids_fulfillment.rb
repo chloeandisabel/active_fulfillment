@@ -1,3 +1,5 @@
+require 'uri'
+
 module ActiveFulfillment
   class IDSFulfillment < Service
 
@@ -32,9 +34,12 @@ module ActiveFulfillment
       query_string =
         case order_id
         when nil
-          ""
+          nil
+        when Array
+          vals = order_id.map { |oid| URI.encode(oid) }
+          "customerOrderReferenceNumbers=#{vals.join(",")}"
         else
-          "customerOrderReferenceNumbers=#{Array.wrap(order_id).join(",")}"
+          "customerOrderReferenceNumbers=#{URI.encode(order_id)}"
         end
 
       make_request(:get, "/request/ship", query: query_string)
@@ -57,7 +62,7 @@ module ActiveFulfillment
     end
 
     def receipt(reference_number)
-      make_request(:get, "/request/inventoryreceipt/#{reference_number}")
+      make_request(:get, "/request/inventoryreceipt/#{URI.encode(reference_number)}")
     end
 
     def unsent_receipts
