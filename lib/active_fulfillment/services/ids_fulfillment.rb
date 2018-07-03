@@ -30,7 +30,7 @@ module ActiveFulfillment
     # +order_id+ may be nil or unspecified (not yet sent shipment
     # confirmations), a single customer order reference number, or an array of
     # customer order reference numbers.
-    def get_order_status(order_id = nil)
+    def order_status(order_id = nil)
       query_string =
         case order_id
         when nil
@@ -50,7 +50,7 @@ module ActiveFulfillment
     end
 
     def fetch_tracking_data(order_ids, _options = {})
-      response = get_order_status(order_ids)
+      response = order_status(order_ids)
       return response unless response.success?
       tracking_numbers_and_urls = response.params["Orders"].flat_map do |order|
         order["Packages"].map { |package| [package["PackageNumber"], package["TrackingUrl"]] }
