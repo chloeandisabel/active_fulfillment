@@ -61,8 +61,21 @@ module ActiveFulfillment
                              tracking_urls: tracking_numbers_and_urls.map(&:last))
     end
 
+    # +reference_number+ may be a single number, an array, or +nil+. Passing
+    # in +nil+ is the same as calling +unsent_receipts+.
     def receipt(reference_number)
-      make_request(:get, "/request/inventoryreceipt/#{URI.encode(reference_number)}")
+      query_string =
+        case reference_number
+        when nil
+          nil
+        when Array
+          vals = reference_number.map { |ref| URI.encode(ref) }
+          "customerReferenceNumbers=#{vals.join(",")}"
+        else
+          "customerReferenceNumbers=#{URI.encode(reference_number)}"
+        end
+
+      make_request(:get, "/request/inventoryreceipt", query: query_string)
     end
 
     def unsent_receipts
