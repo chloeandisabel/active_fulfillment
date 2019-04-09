@@ -97,7 +97,7 @@ class IDSFulfillmentTest < Minitest::Test
     response = @service.fetch_tracking_data(["H0000000001"])
     assert_equal(response.params, { tracking_companies: ["TESTCARRIERCODE"],
                                     tracking_numbers: ["TESTPACKAGENUMBER"],
-                                    tracking_urls: [] }.stringify_keys)
+                                    tracking_urls: [nil] }.stringify_keys)
   end
 
   def test_fetch_stock_levels
